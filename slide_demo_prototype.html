@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Security System — Live Prototype Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0D0F14; --card:#141720; --border:rgba(255,255,255,0.08);
+  --text:#F0EEE8; --muted:#8A8A9A;
+  --teal:#00D4A4; --purple:#9B6DFF; --amber:#FFB547;
+  --red:#FF5A5A; --green:#3ECF8E; --blue:#4DA6FF;
+  --pink:#FF6EB4; --cyan:#00E5FF;
+}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;padding:0;}
+
+/* ── TOP NAV ── */
+.topbar{
+  background:rgba(13,15,20,0.97);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:48px;position:sticky;top:0;z-index:100;
+}
+.topbar-title{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-family:'JetBrains Mono',monospace;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--teal);background:rgba(0,212,164,0.1);border:1px solid rgba(0,212,164,0.25);border-radius:10px;padding:3px 10px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.1}}
+.threat-indicator{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;padding:4px 12px;border-radius:8px;border:1px solid;transition:all 0.4s;}
+
+/* ── GRID ── */
+.page{display:grid;grid-template-columns:320px 1fr 280px;grid-template-rows:auto auto auto;gap:10px;padding:12px 16px;max-width:1300px;margin:0 auto;}
+
+/* ── CARDS ── */
+.card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:12px;padding:12px 14px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:12px 12px 0 0;}
+.c-teal::before{background:linear-gradient(90deg,var(--teal),transparent);}
+.c-purple::before{background:linear-gradient(90deg,var(--purple),transparent);}
+.c-amber::before{background:linear-gradient(90deg,var(--amber),transparent);}
+.c-blue::before{background:linear-gradient(90deg,var(--blue),transparent);}
+.c-green::before{background:linear-gradient(90deg,var(--green),transparent);}
+.c-red::before{background:linear-gradient(90deg,var(--red),transparent);}
+.c-pink::before{background:linear-gradient(90deg,var(--pink),transparent);}
+
+.card-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.ct-teal{color:var(--teal);} .ct-purple{color:var(--purple);} .ct-amber{color:var(--amber);}
+.ct-blue{color:var(--blue);} .ct-green{color:var(--green);} .ct-red{color:var(--red);}
+.ct-pink{color:var(--pink);} .ct-cyan{color:var(--cyan);}
+
+/* ── INPUT ZONE ── */
+.input-zone{grid-column:1;grid-row:1/3;}
+.input-label{font-size:10px;color:var(--muted);margin-bottom:5px;display:block;}
+textarea#userInput{
+  width:100%;height:90px;resize:none;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:11.5px;padding:9px 10px;outline:none;
+  transition:border-color 0.3s;
+}
+textarea#userInput:focus{border-color:rgba(0,212,164,0.4);}
+.mouse-zone{
+  width:100%;height:110px;border:1px dashed rgba(255,255,255,0.1);
+  border-radius:8px;background:rgba(255,255,255,0.02);
+  cursor:crosshair;position:relative;overflow:hidden;margin-top:8px;
+  display:flex;align-items:center;justify-content:center;
+}
+.mz-hint{font-size:9.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;pointer-events:none;transition:opacity 0.3s;}
+.mouse-trail{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--teal);pointer-events:none;transform:translate(-50%,-50%);opacity:0;transition:opacity 0.3s;}
+
+/* signal bars */
+.sig-row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.sig-row:last-child{border-bottom:none;}
+.sig-icon{font-size:12px;width:18px;text-align:center;}
+.sig-label{font-size:9px;color:var(--muted);min-width:70px;}
+.sig-bar-track{flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+.sig-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease,background 0.5s;}
+.sig-val{font-size:9px;font-family:'JetBrains Mono',monospace;min-width:32px;text-align:right;color:var(--text);}
+
+/* ── PIPELINE FLOW (center top) ── */
+.pipeline-zone{grid-column:2;grid-row:1;}
+.pipeline-flow{display:flex;align-items:center;gap:0;padding:6px 0;}
+.pipe-step{flex:1;text-align:center;padding:8px 4px;border-radius:8px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);transition:all 0.4s;position:relative;}
+.pipe-step.active{transform:translateY(-2px);box-shadow:0 0 16px rgba(0,212,164,0.15);}
+.pipe-step.done{opacity:0.6;}
+.ps-icon{font-size:14px;display:block;margin-bottom:2px;}
+.ps-name{font-size:8.5px;font-weight:700;line-height:1.2;}
+.ps-active-teal{border-color:rgba(0,212,164,0.4);background:rgba(0,212,164,0.06);}
+.ps-active-teal .ps-name{color:var(--teal);}
+.ps-active-blue{border-color:rgba(77,166,255,0.4);background:rgba(77,166,255,0.06);}
+.ps-active-blue .ps-name{color:var(--blue);}
+.ps-active-amber{border-color:rgba(255,181,71,0.4);background:rgba(255,181,71,0.06);}
+.ps-active-amber .ps-name{color:var(--amber);}
+.ps-active-purple{border-color:rgba(155,109,255,0.4);background:rgba(155,109,255,0.06);}
+.ps-active-purple .ps-name{color:var(--purple);}
+.ps-active-green{border-color:rgba(62,207,142,0.4);background:rgba(62,207,142,0.06);}
+.ps-active-green .ps-name{color:var(--green);}
+.ps-active-red{border-color:rgba(255,90,90,0.4);background:rgba(255,90,90,0.06);}
+.ps-active-red .ps-name{color:var(--red);}
+.pipe-arrow{flex-shrink:0;padding:0 3px;color:var(--muted);font-size:11px;animation:arrowMove 1.5s ease-in-out infinite;}
+@keyframes arrowMove{0%,100%{opacity:0.3;transform:translateX(0)}50%{opacity:1;transform:translateX(2px)}}
+
+/* ── GAUGE (center middle) ── */
+.gauge-zone{grid-column:2;grid-row:2;}
+.gauge-inner{display:flex;align-items:flex-start;gap:14px;}
+.gauge-svg-wrap{flex-shrink:0;}
+.gauge-details{flex:1;display:flex;flex-direction:column;gap:6px;}
+.score-big{font-size:36px;font-weight:700;font-family:'JetBrains Mono',monospace;transition:color 0.6s;line-height:1;}
+.score-label{font-size:9.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.confidence-row{display:flex;align-items:center;gap:6px;}
+.conf-label{font-size:9px;color:var(--muted);}
+.conf-bar{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+.conf-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.6s;}
+.conf-val{font-size:9px;color:var(--green);font-family:'JetBrains Mono',monospace;min-width:28px;text-align:right;}
+.risk-level-badge{padding:5px 10px;border-radius:7px;border:1px solid;font-size:11px;font-weight:700;text-align:center;transition:all 0.4s;}
+.model-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:4px;}
+.ms-card{border-radius:6px;padding:5px 6px;border:1px solid rgba(255,255,255,0.07);text-align:center;}
+.ms-name{font-size:8px;color:var(--muted);margin-bottom:2px;}
+.ms-val{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;transition:color 0.4s;}
+
+/* ── LOG PANEL ── */
+.log-zone{grid-column:3;grid-row:1/3;}
+.log-scroll{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;}
+.log-scroll::-webkit-scrollbar{width:3px;}
+.log-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+.log-entry{padding:5px 7px;border-radius:6px;border:1px solid;display:flex;align-items:flex-start;gap:5px;font-size:9px;font-family:'JetBrains Mono',monospace;animation:logSlide 0.3s ease;}
+@keyframes logSlide{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+.le-teal{border-color:rgba(0,212,164,0.2);background:rgba(0,212,164,0.04);color:var(--teal);}
+.le-blue{border-color:rgba(77,166,255,0.2);background:rgba(77,166,255,0.04);color:var(--blue);}
+.le-amber{border-color:rgba(255,181,71,0.2);background:rgba(255,181,71,0.04);color:var(--amber);}
+.le-red{border-color:rgba(255,90,90,0.2);background:rgba(255,90,90,0.04);color:var(--red);}
+.le-green{border-color:rgba(62,207,142,0.2);background:rgba(62,207,142,0.04);color:var(--green);}
+.le-purple{border-color:rgba(155,109,255,0.2);background:rgba(155,109,255,0.04);color:var(--purple);}
+.le-muted{border-color:rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);color:var(--muted);}
+.le-time{opacity:0.5;flex-shrink:0;}
+.le-msg{flex:1;line-height:1.35;color:inherit;}
+
+/* ── FEATURE VECTOR ── */
+.fv-zone{grid-column:1;grid-row:3;}
+.fv-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;}
+.fv-cell{aspect-ratio:1;border-radius:3px;border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:7.5px;font-family:'JetBrains Mono',monospace;transition:background 0.4s,color 0.4s;color:var(--muted);}
+
+/* ── DECISION ZONE ── */
+.decision-zone{grid-column:2;grid-row:3;}
+.decision-row-inner{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.dec-card{border-radius:9px;border:1px solid;padding:9px 10px;transition:all 0.4s;opacity:0.5;}
+.dec-card.active-card{opacity:1;transform:translateY(-2px);}
+.dc-l{border-color:rgba(0,212,164,0.3);background:rgba(0,212,164,0.04);}
+.dc-m{border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.04);}
+.dc-h{border-color:rgba(255,90,90,0.3); background:rgba(255,90,90,0.04);}
+.dc-l.active-card{box-shadow:0 0 20px rgba(0,212,164,0.2);}
+.dc-m.active-card{box-shadow:0 0 20px rgba(255,181,71,0.2);}
+.dc-h.active-card{box-shadow:0 0 20px rgba(255,90,90,0.2);}
+.dec-icon{font-size:18px;margin-bottom:4px;}
+.dec-title{font-size:10px;font-weight:700;margin-bottom:2px;}
+.dc-l .dec-title{color:var(--teal);}
+.dc-m .dec-title{color:var(--amber);}
+.dc-h .dec-title{color:var(--red);}
+.dec-range{font-size:8.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:5px;}
+.dec-action{font-size:9px;color:var(--text);}
+.dec-bar{height:3px;border-radius:2px;margin-top:6px;}
+.dc-l .dec-bar{background:var(--teal);width:25%;}
+.dc-m .dec-bar{background:var(--amber);width:55%;}
+.dc-h .dec-bar{background:var(--red);width:85%;}
+
+/* ── STATS PANEL ── */
+.stats-zone{grid-column:3;grid-row:3;}
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.stat-row:last-child{border-bottom:none;}
+.stat-label{font-size:9.5px;color:var(--muted);}
+.stat-val{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;transition:color 0.4s;}
+
+/* ── SCENARIO BTNS ── */
+.scenario-bar{grid-column:1/-1;display:flex;align-items:center;gap:7px;padding:8px 0 2px;}
+.scene-label{font-size:9.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-right:4px;}
+.scene-btn{padding:5px 14px;border-radius:8px;border:1px solid;cursor:pointer;font-size:10px;font-weight:600;font-family:'Space Grotesk',sans-serif;transition:all 0.2s;background:transparent;}
+.scene-btn:hover{transform:translateY(-1px);}
+.sb-normal{color:var(--teal);border-color:rgba(0,212,164,0.3);}
+.sb-normal:hover{background:rgba(0,212,164,0.1);}
+.sb-suspicious{color:var(--amber);border-color:rgba(255,181,71,0.3);}
+.sb-suspicious:hover{background:rgba(255,181,71,0.1);}
+.sb-attack{color:var(--red);border-color:rgba(255,90,90,0.3);}
+.sb-attack:hover{background:rgba(255,90,90,0.1);}
+.sb-bot{color:var(--purple);border-color:rgba(155,109,255,0.3);}
+.sb-bot:hover{background:rgba(155,109,255,0.1);}
+.sb-vpn{color:var(--pink);border-color:rgba(255,110,180,0.3);}
+.sb-vpn:hover{background:rgba(255,110,180,0.1);}
+.reset-btn{margin-left:auto;padding:5px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:10px;font-weight:600;color:var(--muted);background:transparent;transition:all 0.2s;}
+.reset-btn:hover{background:rgba(255,255,255,0.05);color:var(--text);}
+
+/* needle animation */
+#needle-g{transform-origin:100px 120px;transition:transform 1.2s cubic-bezier(0.34,1.2,0.64,1);}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">🛡 AI Security System — Live Prototype</div>
+  <div class="topbar-right">
+    <span id="evalTimer" style="font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;">eval in 100ms</span>
+    <div class="live-badge"><div class="live-dot"></div>LIVE · 100ms</div>
+    <div class="threat-indicator" id="threatIndicator" style="color:var(--teal);border-color:rgba(0,212,164,0.3);background:rgba(0,212,164,0.07);">🟢 LOW RISK</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ── SCENARIO BUTTONS ── -->
+  <div class="scenario-bar">
+    <span class="scene-label">// Simulate:</span>
+    <button class="scene-btn sb-normal"    onclick="runScenario('normal')">✅ Normal User</button>
+    <button class="scene-btn sb-suspicious" onclick="runScenario('suspicious')">⚠️ Suspicious Activity</button>
+    <button class="scene-btn sb-attack"    onclick="runScenario('attack')">🚫 Session Hijack</button>
+    <button class="scene-btn sb-bot"       onclick="runScenario('bot')">🤖 Bot Attack</button>
+    <button class="scene-btn sb-vpn"       onclick="runScenario('vpn')">🌐 VPN + Geo Jump</button>
+    <button class="reset-btn"             onclick="runScenario('idle')">⟳ Reset</button>
+  </div>
+
+  <!-- ── LEFT: INPUT SIGNALS ── -->
+  <div class="input-zone card c-teal">
+    <div class="card-title ct-teal">📡 Input Signals — Behavioral Capture</div>
+    <span class="input-label">Type anything below (keystroke dynamics captured):</span>
+    <textarea id="userInput" placeholder="Start typing here..."></textarea>
+    <div class="mouse-zone" id="mouseZone">
+      <span class="mz-hint" id="mzHint">Move mouse here</span>
+      <div class="mouse-trail" id="mouseTrail"></div>
+    </div>
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:0;">
+      <div class="sig-row">
+        <div class="sig-icon">⌨️</div>
+        <div class="sig-label">Typing WPM</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" id="bar-wpm" style="width:0%;background:var(--teal)"></div></div>
+        <div class="sig-val" id="val-wpm" style="color:var(--teal)">0</div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-icon">🖱️</div>
+        <div class="sig-label">Mouse Velocity</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" id="bar-mouse" style="width:0%;background:var(--blue)"></div></div>
+        <div class="sig-val" id="val-mouse" style="color:var(--blue)">0</div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-icon">📍</div>
+        <div class="sig-label">Geo Variance</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" id="bar-geo" style="width:12%;background:var(--green)"></div></div>
+        <div class="sig-val" id="val-geo" style="color:var(--green)">Low</div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-icon">📱</div>
+        <div class="sig-label">Device Match</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" id="bar-device" style="width:95%;background:var(--teal)"></div></div>
+        <div class="sig-val" id="val-device" style="color:var(--teal)">✓</div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-icon">🕐</div>
+        <div class="sig-label">Login Time</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" id="bar-time" style="width:80%;background:var(--teal)"></div></div>
+        <div class="sig-val" id="val-time" style="color:var(--teal)">Normal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CENTER TOP: PIPELINE ── -->
+  <div class="pipeline-zone card c-blue" style="padding-bottom:8px;">
+    <div class="card-title ct-blue">⚡ ML Pipeline — Real-Time Processing Flow</div>
+    <div class="pipeline-flow">
+      <div class="pipe-step" id="ps0">
+        <span class="ps-icon">📡</span>
+        <div class="ps-name" style="color:var(--muted)">Data Capture</div>
+      </div>
+      <div class="pipe-arrow">▶</div>
+      <div class="pipe-step" id="ps1">
+        <span class="ps-icon">⚡</span>
+        <div class="ps-name" style="color:var(--muted)">Stream Proc.</div>
+      </div>
+      <div class="pipe-arrow">▶</div>
+      <div class="pipe-step" id="ps2">
+        <span class="ps-icon">🔧</span>
+        <div class="ps-name" style="color:var(--muted)">Feature Eng.</div>
+      </div>
+      <div class="pipe-arrow">▶</div>
+      <div class="pipe-step" id="ps3">
+        <span class="ps-icon">⚖️</span>
+        <div class="ps-name" style="color:var(--muted)">Normalize</div>
+      </div>
+      <div class="pipe-arrow">▶</div>
+      <div class="pipe-step" id="ps4">
+        <span class="ps-icon">🧠</span>
+        <div class="ps-name" style="color:var(--muted)">ML Models</div>
+      </div>
+      <div class="pipe-arrow">▶</div>
+      <div class="pipe-step" id="ps5">
+        <span class="ps-icon">⚙️</span>
+        <div class="ps-name" style="color:var(--muted)">Decision</div>
+      </div>
+      <div class="pipe-arrow">▶</div>
+      <div class="pipe-step" id="ps6">
+        <span class="ps-icon">🛡️</span>
+        <div class="ps-name" style="color:var(--muted)">Response</div>
+      </div>
+    </div>
+    <div style="font-size:8.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-align:center;margin-top:2px;" id="pipelineStatus">// waiting for input...</div>
+  </div>
+
+  <!-- ── RIGHT: LIVE LOG ── -->
+  <div class="log-zone card c-purple" style="grid-row:1/3;">
+    <div class="card-title ct-purple">📋 Security Event Log</div>
+    <div class="log-scroll" id="logScroll"></div>
+  </div>
+
+  <!-- ── CENTER MIDDLE: GAUGE ── -->
+  <div class="gauge-zone card c-amber">
+    <div class="card-title ct-amber">🎯 Risk Score Meter</div>
+    <div class="gauge-inner">
+      <!-- SVG gauge -->
+      <div class="gauge-svg-wrap">
+        <svg width="200" height="130" viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+          <!-- bg arcs -->
+          <path d="M 20 120 A 80 80 0 0 1 60 27" stroke="#3ECF8E" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.2"/>
+          <path d="M 60 27 A 80 80 0 0 1 140 27" stroke="#FFB547" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.2"/>
+          <path d="M 140 27 A 80 80 0 0 1 180 120" stroke="#FF5A5A" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.2"/>
+          <!-- glow arcs -->
+          <path d="M 20 120 A 80 80 0 0 1 60 27" stroke="#3ECF8E" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.9"/>
+          <path d="M 60 27 A 80 80 0 0 1 140 27" stroke="#FFB547" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.9"/>
+          <path d="M 140 27 A 80 80 0 0 1 180 120" stroke="#FF5A5A" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.9"/>
+          <!-- ticks -->
+          <line x1="20" y1="120" x2="26" y2="114" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+          <line x1="60" y1="27" x2="65" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+          <line x1="100" y1="20" x2="100" y2="27" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+          <line x1="140" y1="27" x2="135" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+          <line x1="180" y1="120" x2="174" y2="114" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+          <!-- labels -->
+          <text x="10" y="126" font-family="JetBrains Mono" font-size="8" fill="#8A8A9A">0.0</text>
+          <text x="48" y="22" font-family="JetBrains Mono" font-size="8" fill="#8A8A9A">0.3</text>
+          <text x="91" y="16" font-family="JetBrains Mono" font-size="8" fill="#8A8A9A">0.5</text>
+          <text x="132" y="22" font-family="JetBrains Mono" font-size="8" fill="#8A8A9A">0.7</text>
+          <text x="168" y="126" font-family="JetBrains Mono" font-size="8" fill="#8A8A9A">1.0</text>
+          <!-- hub -->
+          <circle cx="100" cy="120" r="7" fill="#1A1D26" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+          <circle cx="100" cy="120" r="3" fill="#FFB547" id="hubDot"/>
+          <!-- needle -->
+          <g id="needle-g">
+            <line x1="100" y1="120" x2="100" y2="30" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.95"/>
+            <polygon points="100,24 97.5,34 102.5,34" fill="white" opacity="0.95"/>
+          </g>
+        </svg>
+      </div>
+      <!-- score details -->
+      <div class="gauge-details">
+        <div>
+          <div class="score-big" id="scoreBig" style="color:var(--teal)">0.08</div>
+          <div class="score-label">ANOMALY SCORE</div>
+        </div>
+        <div class="risk-level-badge" id="riskBadge" style="color:var(--teal);border-color:rgba(0,212,164,0.3);background:rgba(0,212,164,0.08);">🟢 LOW RISK — Allow</div>
+        <div class="confidence-row">
+          <span class="conf-label">Confidence</span>
+          <div class="conf-bar"><div class="conf-fill" id="confFill" style="width:94%"></div></div>
+          <span class="conf-val" id="confVal">94%</span>
+        </div>
+        <div class="model-scores">
+          <div class="ms-card">
+            <div class="ms-name">LSTM</div>
+            <div class="ms-val" id="ms-lstm" style="color:var(--purple)">0.07</div>
+          </div>
+          <div class="ms-card">
+            <div class="ms-name">Rand.Forest</div>
+            <div class="ms-val" id="ms-rf" style="color:var(--green)">0.09</div>
+          </div>
+          <div class="ms-card">
+            <div class="ms-name">Ensemble</div>
+            <div class="ms-val" id="ms-ens" style="color:var(--amber)">0.08</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM LEFT: FEATURE VECTOR ── -->
+  <div class="fv-zone card c-purple">
+    <div class="card-title ct-purple">🔢 Feature Vector (48-dim) — Normalized Input to ML</div>
+    <div class="fv-grid" id="fvGrid"></div>
+    <div style="font-size:8.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:6px;" id="fvLabel">// StandardScaler applied — device-agnostic normalization</div>
+  </div>
+
+  <!-- ── BOTTOM CENTER: DECISION ── -->
+  <div class="decision-zone card c-green">
+    <div class="card-title ct-green">⚙️ Decision Engine — Response Action</div>
+    <div class="decision-row-inner">
+      <div class="dec-card dc-l" id="dec-low">
+        <div class="dec-icon">✅</div>
+        <div class="dec-title">LOW RISK</div>
+        <div class="dec-range">0.00 – 0.30</div>
+        <div class="dec-action">Session continues. Zero friction for user.</div>
+        <div class="dec-bar"></div>
+      </div>
+      <div class="dec-card dc-m" id="dec-med">
+        <div class="dec-icon">🔐</div>
+        <div class="dec-title">MEDIUM RISK</div>
+        <div class="dec-range">0.31 – 0.69</div>
+        <div class="dec-action">Step-up auth — OTP / Security Question triggered.</div>
+        <div class="dec-bar"></div>
+      </div>
+      <div class="dec-card dc-h" id="dec-high">
+        <div class="dec-icon">🚫</div>
+        <div class="dec-title">HIGH RISK</div>
+        <div class="dec-range">0.70 – 1.00</div>
+        <div class="dec-action">Session terminated. Alert fired. Event logged.</div>
+        <div class="dec-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM RIGHT: SESSION STATS ── -->
+  <div class="stats-zone card c-teal">
+    <div class="card-title ct-teal">📊 Session Analytics</div>
+    <div class="stat-row">
+      <div class="stat-label">Session Duration</div>
+      <div class="stat-val" id="stat-duration" style="color:var(--teal)">00:00</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Events Captured</div>
+      <div class="stat-val" id="stat-events" style="color:var(--blue)">0</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Evaluations Run</div>
+      <div class="stat-val" id="stat-evals" style="color:var(--purple)">0</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Avg Risk Score</div>
+      <div class="stat-val" id="stat-avg" style="color:var(--amber)">0.08</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Peak Score</div>
+      <div class="stat-val" id="stat-peak" style="color:var(--muted)">0.08</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Alerts Fired</div>
+      <div class="stat-val" id="stat-alerts" style="color:var(--red)">0</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Pipeline Latency</div>
+      <div class="stat-val" id="stat-latency" style="color:var(--green)">—</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Model Accuracy</div>
+      <div class="stat-val" style="color:var(--teal)">~95%</div>
+    </div>
+  </div>
+
+</div><!-- end page -->
+
+<script>
+// ── STATE ──
+const state = {
+  score: 0.08, wpm: 0, mouseVel: 0, geo: 'Low', device: true,
+  timeAnomaly: false, lastKey: null, keystrokeIntervals: [],
+  eventsCount: 0, evalCount: 0, alertCount: 0, scoreHistory: [],
+  peakScore: 0.08, sessionStart: Date.now(), scenario: 'idle',
+  mouseX: 0, mouseY: 0, lastMouseX: 0, lastMouseY: 0,
+  typing: { chars: 0, startTime: null },
+  pipelineRunning: false
+};
+
+// Feature vector
+let fvData = Array(48).fill(0).map(() => Math.random() * 0.3);
+
+// ── BUILD FEATURE GRID ──
+const fvGrid = document.getElementById('fvGrid');
+for(let i=0;i<48;i++){
+  const c=document.createElement('div');
+  c.className='fv-cell'; c.id='fv'+i;
+  c.textContent=fvData[i].toFixed(2);
+  fvGrid.appendChild(c);
+}
+
+// ── LOG ──
+function addLog(msg, type='muted') {
+  const scroll = document.getElementById('logScroll');
+  const now = new Date();
+  const t = now.toTimeString().slice(0,8);
+  const entry = document.createElement('div');
+  entry.className = `log-entry le-${type}`;
+  entry.innerHTML = `<span class="le-time">${t}</span><span class="le-msg">${msg}</span>`;
+  scroll.appendChild(entry);
+  if(scroll.children.length > 60) scroll.removeChild(scroll.children[0]);
+  scroll.scrollTop = scroll.scrollHeight;
+}
+
+// ── NEEDLE ──
+function setNeedle(score) {
+  const deg = -90 + (score * 180);
+  document.getElementById('needle-g').style.transform = `rotate(${deg}deg)`;
+}
+
+// ── UPDATE SCORE UI ──
+function updateScoreUI(score, conf) {
+  const scoreBig = document.getElementById('scoreBig');
+  const riskBadge = document.getElementById('riskBadge');
+  const threat = document.getElementById('threatIndicator');
+  const hubDot = document.getElementById('hubDot');
+
+  scoreBig.textContent = score.toFixed(2);
+  document.getElementById('confFill').style.width = conf + '%';
+  document.getElementById('confVal').textContent = conf + '%';
+  setNeedle(score);
+
+  if(score < 0.30) {
+    scoreBig.style.color = 'var(--teal)';
+    riskBadge.textContent = '🟢 LOW RISK — Session Allowed';
+    riskBadge.style.cssText='color:var(--teal);border-color:rgba(0,212,164,0.3);background:rgba(0,212,164,0.08);';
+    threat.textContent='🟢 LOW RISK';
+    threat.style.cssText='color:var(--teal);border-color:rgba(0,212,164,0.3);background:rgba(0,212,164,0.07);';
+    hubDot.setAttribute('fill','#00D4A4');
+    document.getElementById('dec-low').classList.add('active-card');
+    document.getElementById('dec-med').classList.remove('active-card');
+    document.getElementById('dec-high').classList.remove('active-card');
+  } else if(score < 0.70) {
+    scoreBig.style.color = 'var(--amber)';
+    riskBadge.textContent = '🟡 MEDIUM RISK — OTP Triggered';
+    riskBadge.style.cssText='color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.08);';
+    threat.textContent='🟡 MEDIUM RISK';
+    threat.style.cssText='color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07);';
+    hubDot.setAttribute('fill','#FFB547');
+    document.getElementById('dec-low').classList.remove('active-card');
+    document.getElementById('dec-med').classList.add('active-card');
+    document.getElementById('dec-high').classList.remove('active-card');
+  } else {
+    scoreBig.style.color = 'var(--red)';
+    riskBadge.textContent = '🔴 HIGH RISK — Session Terminated!';
+    riskBadge.style.cssText='color:var(--red);border-color:rgba(255,90,90,0.3);background:rgba(255,90,90,0.08);';
+    threat.textContent='🔴 HIGH RISK';
+    threat.style.cssText='color:var(--red);border-color:rgba(255,90,90,0.3);background:rgba(255,90,90,0.07);';
+    hubDot.setAttribute('fill','#FF5A5A');
+    document.getElementById('dec-low').classList.remove('active-card');
+    document.getElementById('dec-med').classList.remove('active-card');
+    document.getElementById('dec-high').classList.add('active-card');
+  }
+}
+
+// ── UPDATE MODEL SCORES ──
+function updateModelScores(lstm, rf, ens) {
+  const el=(id,v)=>{
+    const e=document.getElementById(id); e.textContent=v.toFixed(2);
+    const c=v<0.3?'var(--teal)':v<0.7?'var(--amber)':'var(--red)';
+    e.style.color=c;
+  };
+  el('ms-lstm',lstm); el('ms-rf',rf); el('ms-ens',ens);
+}
+
+// ── ANIMATE PIPELINE ──
+const pipeColors = [
+  'ps-active-teal','ps-active-blue','ps-active-amber',
+  'ps-active-purple','ps-active-purple','ps-active-amber','ps-active-green'
+];
+function animatePipeline(onDone) {
+  if(state.pipelineRunning) return;
+  state.pipelineRunning = true;
+  for(let i=0;i<7;i++) {
+    const el=document.getElementById('ps'+i);
+    el.className='pipe-step';
+  }
+  let step=0;
+  const statuses=[
+    '// capturing behavioral events...',
+    '// kafka stream processing...',
+    '// extracting 48-dim feature vector...',
+    '// standardscaler normalization...',
+    '// LSTM + RandomForest inference...',
+    '// decision engine scoring...',
+    '// enforcing response action...'
+  ];
+  const interval=setInterval(()=>{
+    if(step>0){
+      document.getElementById('ps'+(step-1)).className='pipe-step done '+pipeColors[step-1];
+    }
+    if(step<7){
+      document.getElementById('ps'+step).className='pipe-step active '+pipeColors[step];
+      document.getElementById('pipelineStatus').textContent = statuses[step];
+      step++;
+    } else {
+      clearInterval(interval);
+      state.pipelineRunning=false;
+      if(onDone) onDone();
+    }
+  }, 90);
+}
+
+// ── UPDATE FEATURE VECTOR ──
+function updateFeatureVector(score) {
+  const base = score;
+  for(let i=0;i<48;i++){
+    let v = Math.random()*0.4 + base*0.6 + (Math.random()-0.5)*0.1;
+    v = Math.max(0, Math.min(1, v));
+    fvData[i] = v;
+    const cell = document.getElementById('fv'+i);
+    cell.textContent = v.toFixed(2);
+    const intensity = Math.floor(v*100);
+    if(v < 0.3) cell.style.background=`rgba(0,212,164,${v*0.4+0.05})`, cell.style.color='var(--teal)';
+    else if(v < 0.7) cell.style.background=`rgba(255,181,71,${(v-0.3)*0.5+0.05})`, cell.style.color='var(--amber)';
+    else cell.style.background=`rgba(255,90,90,${(v-0.7)*0.6+0.08})`, cell.style.color='var(--red)';
+  }
+}
+
+// ── SIGNAL BARS ──
+function updateSignalBars(wpm, mouseVel, geo, device, timeAnomaly) {
+  const wpmPct = Math.min(100, (wpm/200)*100);
+  const wpmColor = wpm < 120 ? 'var(--teal)' : wpm < 180 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('bar-wpm').style.width = wpmPct+'%';
+  document.getElementById('bar-wpm').style.background = wpmColor;
+  document.getElementById('val-wpm').textContent = wpm;
+  document.getElementById('val-wpm').style.color = wpmColor;
+
+  const mvPct = Math.min(100, mouseVel);
+  const mvColor = mouseVel < 40 ? 'var(--teal)' : mouseVel < 75 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('bar-mouse').style.width = mvPct+'%';
+  document.getElementById('bar-mouse').style.background = mvColor;
+  document.getElementById('val-mouse').textContent = mouseVel;
+  document.getElementById('val-mouse').style.color = mvColor;
+
+  const geoMap = { 'Low':12, 'Medium':55, 'High':88, 'VPN':95 };
+  const geoColor = geo==='Low'?'var(--teal)': geo==='Medium'?'var(--amber)':'var(--red)';
+  document.getElementById('bar-geo').style.width = (geoMap[geo]||12)+'%';
+  document.getElementById('bar-geo').style.background = geoColor;
+  document.getElementById('val-geo').textContent = geo;
+  document.getElementById('val-geo').style.color = geoColor;
+
+  const devColor = device ? 'var(--teal)' : 'var(--red)';
+  document.getElementById('bar-device').style.width = device ? '95%' : '15%';
+  document.getElementById('bar-device').style.background = devColor;
+  document.getElementById('val-device').textContent = device ? '✓ Known' : '✗ New';
+  document.getElementById('val-device').style.color = devColor;
+
+  const timeColor = timeAnomaly ? 'var(--red)' : 'var(--teal)';
+  document.getElementById('bar-time').style.width = timeAnomaly ? '90%' : '80%';
+  document.getElementById('bar-time').style.background = timeColor;
+  document.getElementById('val-time').textContent = timeAnomaly ? '2:00 AM' : 'Normal';
+  document.getElementById('val-time').style.color = timeColor;
+}
+
+// ── SCENARIOS ──
+const scenarios = {
+  idle: {
+    score:0.08, lstm:0.07, rf:0.09, conf:94, wpm:0, mouseVel:5, geo:'Low', device:true, timeAnomaly:false,
+    logs:[
+      ['System initialized. Monitoring session...','teal'],
+      ['Baseline behavioral profile loaded','green'],
+      ['LSTM + RandomForest models ready','purple'],
+      ['Feature Store connected — 48 dimensions active','blue'],
+      ['Zero Trust mode: ACTIVE','muted'],
+    ]
+  },
+  normal: {
+    score:0.11, lstm:0.10, rf:0.12, conf:96, wpm:72, mouseVel:28, geo:'Low', device:true, timeAnomaly:false,
+    logs:[
+      ['[DATA] Keystroke events captured — WPM: 72','teal'],
+      ['[KAFKA] Event batch published to stream','blue'],
+      ['[FEATURE] Typing baseline: MATCH (±4%)','teal'],
+      ['[LSTM] Temporal pattern: NORMAL — score 0.10','purple'],
+      ['[RF] 312 trees voted: 97% normal','green'],
+      ['[ENSEMBLE] Weighted fusion → 0.11','amber'],
+      ['[DECISION] Risk: LOW — session continues','green'],
+      ['✅ Allow: no friction for user','teal'],
+    ]
+  },
+  suspicious: {
+    score:0.54, lstm:0.58, rf:0.50, conf:88, wpm:120, mouseVel:62, geo:'Medium', device:true, timeAnomaly:true,
+    logs:[
+      ['[DATA] Keystroke spike detected — WPM: 120 (50%↑)','amber'],
+      ['[DATA] Mouse trajectory: erratic pattern','amber'],
+      ['[KAFKA] High-velocity event stream','blue'],
+      ['[FEATURE] Typing delta: +50% above baseline','amber'],
+      ['[FEATURE] Mouse velocity: abnormal vectors','amber'],
+      ['[LSTM] Behavioral drift detected: score 0.58','amber'],
+      ['[RF] Trees vote 61% suspicious','amber'],
+      ['[ENSEMBLE] Score: 0.54 — MEDIUM','amber'],
+      ['[DECISION] Risk: MEDIUM','amber'],
+      ['🔐 OTP triggered — step-up auth sent','amber'],
+    ]
+  },
+  attack: {
+    score:0.89, lstm:0.91, rf:0.87, conf:92, wpm:220, mouseVel:95, geo:'High', device:false, timeAnomaly:true,
+    logs:[
+      ['[ALERT] Typing speed 220 WPM — ROBOTIC','red'],
+      ['[ALERT] Mouse: pixel-perfect straight lines','red'],
+      ['[ALERT] Location: DIFFERENT COUNTRY detected','red'],
+      ['[ALERT] Device fingerprint: MISMATCH','red'],
+      ['[KAFKA] High-risk event stream → priority queue','red'],
+      ['[LSTM] Critical behavioral deviation: 0.91','red'],
+      ['[RF] 289/312 trees flagged: ATTACK','red'],
+      ['[ENSEMBLE] Score: 0.89 — HIGH RISK','red'],
+      ['[DECISION] Risk: HIGH — immediate action','red'],
+      ['🚫 SESSION TERMINATED','red'],
+      ['📡 Alert fired → admin + security team','red'],
+      ['💾 Event logged for model retraining','purple'],
+    ]
+  },
+  bot: {
+    score:0.93, lstm:0.95, rf:0.91, conf:97, wpm:280, mouseVel:100, geo:'Low', device:false, timeAnomaly:false,
+    logs:[
+      ['[ALERT] WPM: 280 — inhuman speed detected','red'],
+      ['[ALERT] Keystroke intervals: PERFECTLY UNIFORM','red'],
+      ['[ALERT] Mouse: no acceleration — scripted','red'],
+      ['[FEATURE] Automation signature identified','red'],
+      ['[LSTM] Pattern: AUTOMATED SCRIPT — 0.95','red'],
+      ['[RF] Bot fingerprint match: 94% confidence','red'],
+      ['[ENSEMBLE] Score: 0.93 — BOT DETECTED','red'],
+      ['🤖 BOT BLOCKED — session killed','red'],
+      ['💾 IP blacklisted + CAPTCHA queued','purple'],
+    ]
+  },
+  vpn: {
+    score:0.71, lstm:0.69, rf:0.73, conf:85, wpm:65, mouseVel:30, geo:'VPN', device:true, timeAnomaly:false,
+    logs:[
+      ['[ALERT] VPN detected — IP anonymized','amber'],
+      ['[ALERT] Geo-jump: India → Netherlands (900km)','red'],
+      ['[DATA] Typing normal — WPM: 65','teal'],
+      ['[DATA] Mouse: normal patterns','teal'],
+      ['[FEATURE] Geo anomaly score: HIGH','red'],
+      ['[LSTM] Behavioral OK, context suspicious: 0.69','amber'],
+      ['[RF] Location + device mismatch: 0.73','amber'],
+      ['[CONTEXT] Known user + VPN = elevated threshold','amber'],
+      ['[ENSEMBLE] Score: 0.71 — BORDERLINE HIGH','red'],
+      ['[DECISION] Risk: HIGH (context override)','red'],
+      ['🌐 VPN flag: session challenged','red'],
+    ]
+  }
+};
+
+function runScenario(name) {
+  state.scenario = name;
+  const sc = scenarios[name];
+  if(!sc) return;
+
+  addLog(`── Scenario: ${name.toUpperCase()} ──`, 'blue');
+
+  animatePipeline(() => {
+    state.score = sc.score;
+    state.evalCount++;
+    state.eventsCount += Math.floor(Math.random()*20)+10;
+    state.scoreHistory.push(sc.score);
+    state.peakScore = Math.max(state.peakScore, sc.score);
+    if(sc.score >= 0.7) state.alertCount++;
+
+    updateScoreUI(sc.score, sc.conf);
+    updateModelScores(sc.lstm, sc.rf, sc.score);
+    updateSignalBars(sc.wpm, sc.mouseVel, sc.geo, sc.device, sc.timeAnomaly);
+    updateFeatureVector(sc.score);
+    updateStats();
+
+    sc.logs.forEach((l, i) => {
+      setTimeout(() => addLog(l[0], l[1]), i * 120);
+    });
+  });
+}
+
+// ── SESSION TIMER ──
+function pad(n){return String(n).padStart(2,'0');}
+function updateStats() {
+  const elapsed = Math.floor((Date.now()-state.sessionStart)/1000);
+  const m=Math.floor(elapsed/60), s=elapsed%60;
+  document.getElementById('stat-duration').textContent = pad(m)+':'+pad(s);
+  document.getElementById('stat-events').textContent = state.eventsCount;
+  document.getElementById('stat-evals').textContent = state.evalCount;
+  const avg = state.scoreHistory.length
+    ? (state.scoreHistory.reduce((a,b)=>a+b,0)/state.scoreHistory.length).toFixed(2)
+    : '0.08';
+  document.getElementById('stat-avg').textContent = avg;
+  document.getElementById('stat-peak').textContent = state.peakScore.toFixed(2);
+  const peakEl=document.getElementById('stat-peak');
+  peakEl.style.color=state.peakScore<0.3?'var(--teal)':state.peakScore<0.7?'var(--amber)':'var(--red)';
+  document.getElementById('stat-alerts').textContent = state.alertCount;
+}
+
+setInterval(updateStats, 1000);
+
+// ── MOUSE TRACKING IN ZONE ──
+const mouseZone = document.getElementById('mouseZone');
+const trail = document.getElementById('mouseTrail');
+let lastMouseMove = Date.now();
+
+mouseZone.addEventListener('mousemove', (e) => {
+  const rect = mouseZone.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  trail.style.left = x+'px'; trail.style.top = y+'px'; trail.style.opacity='0.9';
+  document.getElementById('mzHint').style.opacity='0';
+  const dx = x - state.mouseX, dy = y - state.mouseY;
+  const vel = Math.sqrt(dx*dx+dy*dy);
+  state.mouseX=x; state.mouseY=y;
+  const v = Math.min(100, Math.floor(vel*4));
+  state.eventsCount++;
+  const c=v<40?'var(--teal)':v<75?'var(--amber)':'var(--red)';
+  document.getElementById('bar-mouse').style.width=v+'%';
+  document.getElementById('bar-mouse').style.background=c;
+  document.getElementById('val-mouse').textContent=v;
+  document.getElementById('val-mouse').style.color=c;
+  lastMouseMove=Date.now();
+});
+mouseZone.addEventListener('mouseleave',()=>{
+  trail.style.opacity='0';
+  document.getElementById('mzHint').style.opacity='1';
+});
+
+// ── KEYSTROKE TRACKING ──
+const inputEl = document.getElementById('userInput');
+let wordCount=0, typingStart=null, lastKeystroke=Date.now();
+
+inputEl.addEventListener('keydown', (e) => {
+  const now=Date.now();
+  const interval=now-lastKeystroke; lastKeystroke=now;
+  if(!typingStart) typingStart=now;
+  state.keystrokeIntervals.push(interval);
+  state.eventsCount++;
+
+  const words=inputEl.value.trim().split(/\s+/).filter(w=>w).length;
+  const elapsed=(now-typingStart)/60000;
+  const wpm=elapsed>0?Math.min(300,Math.floor(words/elapsed)):0;
+  const wpmColor=wpm<120?'var(--teal)':wpm<180?'var(--amber)':'var(--red)';
+  const wpmPct=Math.min(100,(wpm/200)*100);
+  document.getElementById('bar-wpm').style.width=wpmPct+'%';
+  document.getElementById('bar-wpm').style.background=wpmColor;
+  document.getElementById('val-wpm').textContent=wpm;
+  document.getElementById('val-wpm').style.color=wpmColor;
+
+  // subtle live score nudge
+  const baseScore=wpm<80?0.08+Math.random()*0.05:
+                  wpm<140?0.25+Math.random()*0.15:
+                  wpm<200?0.55+Math.random()*0.1:
+                  0.82+Math.random()*0.1;
+  const conf=wpm<80?96:wpm<140?88:wpm<200?82:91;
+  const lstm=baseScore+(-0.03+Math.random()*0.06);
+  const rf=baseScore+(-0.03+Math.random()*0.06);
+  updateScoreUI(Math.min(0.99,baseScore), conf);
+  updateModelScores(Math.min(0.99,lstm), Math.min(0.99,rf), Math.min(0.99,baseScore));
+  state.score=baseScore; state.scoreHistory.push(baseScore);
+  state.peakScore=Math.max(state.peakScore,baseScore);
+  if(state.keystrokeIntervals.length%8===0) {
+    updateFeatureVector(baseScore);
+    const stat=wpm<80?'teal':wpm<140?'amber':'red';
+    addLog(`[KEYSTROKE] WPM:${wpm} interval:${interval}ms score:${baseScore.toFixed(2)}`,stat);
+  }
+});
+
+// ── EVAL TIMER DISPLAY ──
+let evalMs=100;
+setInterval(()=>{
+  evalMs-=10; if(evalMs<=0) evalMs=100;
+  document.getElementById('evalTimer').textContent=`eval in ${evalMs}ms`;
+}, 10);
+
+// ── PIPELINE LATENCY DISPLAY ──
+setInterval(()=>{
+  const lat=Math.floor(120+Math.random()*60);
+  document.getElementById('stat-latency').textContent=lat+'ms';
+  const c=lat<150?'var(--teal)':lat<180?'var(--amber)':'var(--red)';
+  document.getElementById('stat-latency').style.color=c;
+},2000);
+
+// ── BOOT SEQUENCE ──
+setTimeout(()=>runScenario('idle'),300);
+setTimeout(()=>{
+  addLog('[SYSTEM] Type in the input box to see live scoring','teal');
+  addLog('[SYSTEM] Or click scenario buttons above','blue');
+  addLog('[SYSTEM] Pipeline processes every 100ms','purple');
+},1800);
+</script>
+</body>
+</html>

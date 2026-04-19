@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Slide 5 – Anomaly Detection: Risk Scoring & Adaptive Response</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #0D0F14;
+  --card:   #141720;
+  --border: rgba(255,255,255,0.08);
+  --text:   #F0EEE8;
+  --muted:  #8A8A9A;
+  --teal:   #00D4A4;
+  --purple: #9B6DFF;
+  --amber:  #FFB547;
+  --red:    #FF5A5A;
+  --green:  #3ECF8E;
+  --blue:   #4DA6FF;
+  --pink:   #FF6EB4;
+  --cyan:   #00E5FF;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+}
+
+.slide {
+  width: 1200px;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  padding: 22px 40px 24px;
+}
+
+.slide::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+.blob { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.08; pointer-events: none; z-index: 0; }
+.blob-1 { width: 420px; height: 320px; background: var(--teal);   top: -80px; left: -100px; }
+.blob-2 { width: 360px; height: 300px; background: var(--red);    bottom: -60px; right: -80px; }
+.blob-3 { width: 300px; height: 240px; background: var(--amber);  top: 200px; left: 38%; }
+.blob-4 { width: 260px; height: 200px; background: var(--purple); top: 60px; right: 220px; }
+
+/* ─── HEADER ─── */
+.header {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 14px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.slide-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--red); background: rgba(255,90,90,0.1);
+  border: 1px solid rgba(255,90,90,0.25); border-radius: 20px; padding: 4px 12px; margin-bottom: 8px;
+}
+.slide-tag .dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+h1 { font-size: 23px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+h1 span { color: var(--amber); }
+.subtitle { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+.hdr-pills { display: flex; gap: 8px; align-items: flex-start; padding-top: 2px; }
+.hdr-pill {
+  text-align: center; padding: 6px 14px; border-radius: 10px; border: 1px solid;
+}
+.hp-teal  { border-color: rgba(0,212,164,0.3); background: rgba(0,212,164,0.06); }
+.hp-amber { border-color: rgba(255,181,71,0.3); background: rgba(255,181,71,0.06); }
+.hp-red   { border-color: rgba(255,90,90,0.3);  background: rgba(255,90,90,0.06); }
+.hp-val { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.hp-lbl { font-size: 8.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.hp-teal  .hp-val { color: var(--teal); }
+.hp-amber .hp-val { color: var(--amber); }
+.hp-red   .hp-val { color: var(--red); }
+
+/* ─── MAIN LAYOUT ─── */
+.main { position: relative; z-index: 1; display: flex; gap: 11px; }
+
+/* ─── LEFT COL ─── */
+.left-col { width: 240px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+
+/* signal card */
+.signal-block {
+  border-radius: 11px; border: 1px solid rgba(0,212,164,0.2);
+  background: rgba(0,212,164,0.03); padding: 10px 12px; position: relative; overflow: hidden;
+}
+.signal-block::before {
+  content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+  background: var(--teal); border-radius: 11px 0 0 11px;
+}
+.block-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+}
+.bt-teal   { color: var(--teal); }
+.bt-purple { color: var(--purple); }
+.bt-amber  { color: var(--amber); }
+.bt-blue   { color: var(--blue); }
+.bt-green  { color: var(--green); }
+.bt-red    { color: var(--red); }
+
+.sig-row {
+  display: flex; align-items: center; gap: 7px; padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sig-row:last-child { border-bottom: none; padding-bottom: 0; }
+.sig-icon { font-size: 13px; width: 20px; text-align: center; }
+.sig-info { flex: 1; }
+.sig-name { font-size: 10px; font-weight: 600; color: var(--text); }
+.sig-desc { font-size: 9px; color: var(--muted); }
+/* animated pulse bar */
+.sig-bar { width: 40px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.sig-fill { height: 100%; border-radius: 3px; animation: barPulse 2s ease-in-out infinite; }
+@keyframes barPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+.sf-teal   { background: var(--teal); }
+.sf-blue   { background: var(--blue); }
+.sf-purple { background: var(--purple); }
+.sf-amber  { background: var(--amber); }
+
+/* ML Models block */
+.ml-block {
+  border-radius: 11px; border: 1px solid rgba(155,109,255,0.2);
+  background: rgba(155,109,255,0.03); padding: 10px 12px; position: relative; overflow: hidden;
+}
+.ml-block::before {
+  content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+  background: var(--purple); border-radius: 11px 0 0 11px;
+}
+.ml-row { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 7px; }
+.ml-row:last-child { margin-bottom: 0; }
+.ml-badge {
+  width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.mlb-lstm { background: rgba(155,109,255,0.15); border: 1px solid rgba(155,109,255,0.3); }
+.mlb-rf   { background: rgba(62,207,142,0.15);  border: 1px solid rgba(62,207,142,0.3); }
+.ml-info { flex: 1; }
+.ml-name { font-size: 10px; font-weight: 700; }
+.ml-name-p { color: var(--purple); }
+.ml-name-g { color: var(--green); }
+.ml-desc { font-size: 9px; color: var(--muted); line-height: 1.35; margin-top: 1px; }
+.ml-out {
+  font-size: 9px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text); background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 1px 5px; margin-top: 3px; display: inline-block;
+}
+
+/* ─── CENTER COL ─── */
+.center-col { flex: 1; display: flex; flex-direction: column; gap: 9px; }
+
+/* === ANIMATED GAUGE === */
+.gauge-card {
+  border-radius: 13px; border: 1px solid rgba(255,181,71,0.2);
+  background: rgba(255,255,255,0.02);
+  padding: 14px 18px; position: relative; overflow: hidden;
+}
+.gauge-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--amber), var(--red));
+}
+.gauge-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--amber); text-align: center; margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+
+/* SVG gauge container */
+.gauge-svg-wrap { display: flex; justify-content: center; margin-bottom: 8px; }
+
+/* Zone labels below gauge */
+.gauge-zones { display: flex; justify-content: space-between; padding: 0 10px; }
+.gz { text-align: center; }
+.gz-label { font-size: 9px; font-weight: 700; }
+.gz-range  { font-size: 8.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.gz-action { font-size: 8.5px; color: var(--muted); font-style: italic; }
+.gz-low    .gz-label { color: var(--teal); }
+.gz-med    .gz-label { color: var(--amber); }
+.gz-high   .gz-label { color: var(--red); }
+
+/* Needle animation */
+@keyframes needleSweep {
+  0%   { transform: rotate(-90deg); }
+  20%  { transform: rotate(-55deg); }
+  40%  { transform: rotate(10deg); }
+  60%  { transform: rotate(-20deg); }
+  80%  { transform: rotate(65deg); }
+  100% { transform: rotate(35deg); }
+}
+#needle { transform-origin: 150px 140px; animation: needleSweep 6s ease-in-out infinite alternate; }
+
+/* live score readout */
+.score-readout {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 14px; margin: 0 auto; width: fit-content;
+}
+.sr-label { font-size: 9.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.sr-val   { font-size: 18px; font-weight: 700; font-family: 'JetBrains Mono', monospace; animation: scoreFlicker 6s ease-in-out infinite; }
+@keyframes scoreFlicker {
+  0%,100%{ color:var(--teal); }
+  35%{ color:var(--teal); }
+  45%{ color:var(--amber); }
+  65%{ color:var(--amber); }
+  75%{ color:var(--red); }
+  90%{ color:var(--red); }
+}
+.sr-conf { font-size: 9.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.sr-conf-val { color: var(--green); font-weight: 700; }
+
+/* live eval tag */
+.eval-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9px; font-family: 'JetBrains Mono', monospace;
+  color: var(--teal); background: rgba(0,212,164,0.07);
+  border: 1px solid rgba(0,212,164,0.2); border-radius: 10px; padding: 2px 8px; margin-left: 6px;
+}
+.eval-tag .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); animation: pulse 1s infinite; }
+
+/* ─── FLOW PIPELINE ─── */
+.flow-pipe {
+  border-radius: 13px; border: 1px solid rgba(77,166,255,0.15);
+  background: rgba(77,166,255,0.02); padding: 10px 14px;
+}
+.flow-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--blue); margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+}
+.flow-steps {
+  display: flex; align-items: center; gap: 0;
+}
+.flow-step {
+  flex: 1; text-align: center; padding: 7px 4px; border-radius: 8px; position: relative;
+}
+.fs-blue   { background: rgba(77,166,255,0.07);  border: 1px solid rgba(77,166,255,0.2); }
+.fs-teal   { background: rgba(0,212,164,0.07);   border: 1px solid rgba(0,212,164,0.2); }
+.fs-amber  { background: rgba(255,181,71,0.07);  border: 1px solid rgba(255,181,71,0.2); }
+.fs-purple { background: rgba(155,109,255,0.07); border: 1px solid rgba(155,109,255,0.2); }
+.fs-green  { background: rgba(62,207,142,0.07);  border: 1px solid rgba(62,207,142,0.2); }
+.fs-icon { font-size: 14px; margin-bottom: 2px; }
+.fs-name { font-size: 9px; font-weight: 700; line-height: 1.2; }
+.fs-blue   .fs-name { color: var(--blue); }
+.fs-teal   .fs-name { color: var(--teal); }
+.fs-amber  .fs-name { color: var(--amber); }
+.fs-purple .fs-name { color: var(--purple); }
+.fs-green  .fs-name { color: var(--green); }
+
+.flow-arrow {
+  color: var(--muted); font-size: 12px; padding: 0 3px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+}
+.fa-animated { animation: arrowPulse 1.5s ease-in-out infinite; }
+@keyframes arrowPulse { 0%,100%{opacity:0.3;transform:translateX(0)} 50%{opacity:1;transform:translateX(2px)} }
+.fa-ms { font-size: 7.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+
+/* ─── DECISION + SCENARIOS ─── */
+.decision-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+.decision-card {
+  border-radius: 11px; padding: 10px 11px; border: 1px solid; position: relative; overflow: hidden;
+}
+.dc-low  { border-color: rgba(0,212,164,0.3);  background: rgba(0,212,164,0.04); }
+.dc-med  { border-color: rgba(255,181,71,0.3);  background: rgba(255,181,71,0.04); }
+.dc-high { border-color: rgba(255,90,90,0.3);   background: rgba(255,90,90,0.04); }
+
+.dc-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.dc-icon { font-size: 16px; }
+.dc-badge { font-size: 10px; font-weight: 700; }
+.dc-low  .dc-badge { color: var(--teal); }
+.dc-med  .dc-badge { color: var(--amber); }
+.dc-high .dc-badge { color: var(--red); }
+.dc-range { font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--muted); }
+
+.dc-scenario-label {
+  font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); margin-bottom: 4px;
+}
+.dc-signals { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.dc-sig { font-size: 9px; color: var(--text); display: flex; align-items: flex-start; gap: 4px; line-height: 1.3; }
+.dc-sig::before { content: '›'; color: var(--muted); flex-shrink: 0; }
+
+.dc-action-wrap {
+  padding: 5px 8px; border-radius: 6px; border: 1px solid; margin-top: 5px;
+}
+.dc-low  .dc-action-wrap { border-color: rgba(0,212,164,0.25);  background: rgba(0,212,164,0.07); }
+.dc-med  .dc-action-wrap { border-color: rgba(255,181,71,0.25);  background: rgba(255,181,71,0.07); }
+.dc-high .dc-action-wrap { border-color: rgba(255,90,90,0.25);   background: rgba(255,90,90,0.07); }
+
+.dc-action-title { font-size: 9px; font-weight: 700; margin-bottom: 2px; }
+.dc-low  .dc-action-title { color: var(--teal); }
+.dc-med  .dc-action-title { color: var(--amber); }
+.dc-high .dc-action-title { color: var(--red); }
+.dc-action-detail { font-size: 8.5px; color: var(--text); line-height: 1.3; }
+
+/* anomaly score bar on card */
+.dc-score-bar { height: 4px; border-radius: 2px; margin-top: 6px; }
+.dc-low  .dc-score-bar { width: 28%; background: var(--teal); box-shadow: 0 0 6px rgba(0,212,164,0.5); }
+.dc-med  .dc-score-bar { width: 56%; background: var(--amber); box-shadow: 0 0 6px rgba(255,181,71,0.5); }
+.dc-high .dc-score-bar { width: 88%; background: var(--red);   box-shadow: 0 0 6px rgba(255,90,90,0.5); }
+
+/* ─── RIGHT COL ─── */
+.right-col { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+
+/* Decision Engine card */
+.de-block {
+  border-radius: 11px; border: 1px solid rgba(255,181,71,0.2);
+  background: rgba(255,181,71,0.03); padding: 10px 12px; position: relative; overflow: hidden;
+}
+.de-block::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--amber), transparent);
+  border-radius: 11px 11px 0 0;
+}
+.de-row { display: flex; gap: 6px; align-items: flex-start; margin-bottom: 5px; }
+.de-row:last-child { margin-bottom: 0; }
+.de-ico { font-size: 11px; width: 16px; flex-shrink: 0; padding-top: 1px; }
+.de-txt { font-size: 9.5px; color: var(--muted); line-height: 1.4; }
+.de-txt strong { color: var(--text); }
+
+/* dynamic threshold */
+.thresh-box {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: 7px; padding: 6px 8px; margin-top: 6px;
+}
+.thresh-title { font-size: 8.5px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+.thresh-row { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+.thresh-row:last-child { margin-bottom: 0; }
+.thresh-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.thresh-txt { font-size: 9px; color: var(--muted); }
+.thresh-txt strong { color: var(--text); }
+
+/* security block */
+.sec-block {
+  border-radius: 11px; border: 1px solid rgba(255,90,90,0.2);
+  background: rgba(255,90,90,0.03); padding: 10px 12px; position: relative; overflow: hidden;
+}
+.sec-block::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--red), transparent);
+  border-radius: 11px 11px 0 0;
+}
+.sec-item { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 5px; }
+.sec-item:last-child { margin-bottom: 0; }
+.sec-ico { font-size: 11px; width: 16px; flex-shrink: 0; }
+.sec-info { flex: 1; }
+.sec-name { font-size: 10px; font-weight: 600; color: var(--text); }
+.sec-desc { font-size: 9px; color: var(--muted); line-height: 1.3; margin-top: 1px; }
+
+/* continuous learning loop */
+.loop-block {
+  border-radius: 11px; border: 1px solid rgba(62,207,142,0.2);
+  background: rgba(62,207,142,0.03); padding: 10px 12px; position: relative; overflow: hidden;
+}
+.loop-block::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green), transparent);
+  border-radius: 11px 11px 0 0;
+}
+.loop-steps { display: flex; flex-direction: column; gap: 0; }
+.loop-step { display: flex; align-items: flex-start; gap: 6px; padding: 4px 0; position: relative; }
+.loop-line-connector {
+  position: absolute; left: 7px; top: 22px; bottom: -4px; width: 1px;
+  background: linear-gradient(180deg, rgba(62,207,142,0.3), transparent);
+}
+.loop-num {
+  width: 15px; height: 15px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+  background: rgba(62,207,142,0.15); border: 1px solid rgba(62,207,142,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 700; color: var(--green);
+}
+.loop-txt { font-size: 9.5px; color: var(--muted); line-height: 1.35; }
+.loop-txt strong { color: var(--text); }
+.loop-badge {
+  display: inline-flex; align-items: center; gap: 3px; margin-top: 5px;
+  font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--green);
+  background: rgba(62,207,142,0.08); border: 1px solid rgba(62,207,142,0.2);
+  border-radius: 10px; padding: 2px 7px;
+}
+.loop-badge .spin { display: inline-block; animation: spin 3s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* real-time intel block */
+.rt-block {
+  border-radius: 11px; border: 1px solid rgba(0,229,255,0.2);
+  background: rgba(0,229,255,0.03); padding: 10px 12px; position: relative; overflow: hidden;
+}
+.rt-block::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--cyan), transparent);
+  border-radius: 11px 11px 0 0;
+}
+.rt-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.rt-row:last-child { margin-bottom: 0; }
+.rt-icon { font-size: 13px; }
+.rt-info { flex: 1; }
+.rt-val { font-size: 13px; font-weight: 700; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+.rt-lbl { font-size: 9px; color: var(--muted); }
+
+/* ─── FOOTER ─── */
+.footer {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.footer-tag  { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; }
+.footer-note { font-size: 10px; color: var(--muted); font-style: italic; }
+.footer-slide{ font-size: 11px; font-weight: 600; color: var(--amber); font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+
+  <!-- ─── HEADER ─── -->
+  <div class="header">
+    <div>
+      <div class="slide-tag"><span class="dot"></span> AI Security System · Slide 05</div>
+      <h1>Anomaly Detection: <span>Risk Scoring</span> &amp; Adaptive Response System</h1>
+      <div class="subtitle">// real-time behavior scoring → dynamic risk engine → zero-friction enforcement</div>
+    </div>
+    <div class="hdr-pills">
+      <div class="hdr-pill hp-teal">
+        <div class="hp-val">0.0–0.3</div>
+        <div class="hp-lbl">🟢 Low Risk</div>
+      </div>
+      <div class="hdr-pill hp-amber">
+        <div class="hp-val">0.3–0.7</div>
+        <div class="hp-lbl">🟡 Medium Risk</div>
+      </div>
+      <div class="hdr-pill hp-red">
+        <div class="hp-val">0.7–1.0</div>
+        <div class="hp-lbl">🔴 High Risk</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MAIN ─── -->
+  <div class="main">
+
+    <!-- ══════ LEFT ══════ -->
+    <div class="left-col">
+
+      <!-- Input Signals -->
+      <div class="signal-block">
+        <div class="block-title bt-teal">📡 Input Signals</div>
+
+        <div class="sig-row">
+          <div class="sig-icon">⌨️</div>
+          <div class="sig-info">
+            <div class="sig-name">Typing Behavior</div>
+            <div class="sig-desc">WPM, keystroke intervals, dwell time</div>
+          </div>
+          <div class="sig-bar"><div class="sig-fill sf-teal" style="width:82%;animation-delay:0s"></div></div>
+        </div>
+        <div class="sig-row">
+          <div class="sig-icon">🖱️</div>
+          <div class="sig-info">
+            <div class="sig-name">Mouse Movement</div>
+            <div class="sig-desc">Velocity, trajectory, acceleration</div>
+          </div>
+          <div class="sig-bar"><div class="sig-fill sf-blue" style="width:67%;animation-delay:0.4s"></div></div>
+        </div>
+        <div class="sig-row">
+          <div class="sig-icon">📱</div>
+          <div class="sig-info">
+            <div class="sig-name">Device Fingerprint</div>
+            <div class="sig-desc">Hardware ID, OS, screen resolution</div>
+          </div>
+          <div class="sig-bar"><div class="sig-fill sf-purple" style="width:93%;animation-delay:0.8s"></div></div>
+        </div>
+        <div class="sig-row">
+          <div class="sig-icon">📍</div>
+          <div class="sig-info">
+            <div class="sig-name">Location Change</div>
+            <div class="sig-desc">GPS/IP delta vs. last known location</div>
+          </div>
+          <div class="sig-bar"><div class="sig-fill sf-amber" style="width:45%;animation-delay:1.2s"></div></div>
+        </div>
+      </div>
+
+      <!-- ML Models -->
+      <div class="ml-block">
+        <div class="block-title bt-purple">🧠 ML Models</div>
+
+        <div class="ml-row">
+          <div class="ml-badge mlb-lstm">🔄</div>
+          <div class="ml-info">
+            <div class="ml-name ml-name-p">LSTM Network</div>
+            <div class="ml-desc">Reads behavior sequences over time. Detects gradual drifts invisible in a single snapshot — e.g. progressively robotic typing.</div>
+            <div class="ml-out">→ Temporal anomaly score</div>
+          </div>
+        </div>
+        <div class="ml-row">
+          <div class="ml-badge mlb-rf">🌲</div>
+          <div class="ml-info">
+            <div class="ml-name ml-name-g">Random Forest</div>
+            <div class="ml-desc">Hundreds of decision trees vote on current feature snapshot. Instantly flags known attack patterns and device anomalies.</div>
+            <div class="ml-out">→ Instantaneous risk flag</div>
+          </div>
+        </div>
+
+        <div style="margin-top:6px; padding-top:6px; border-top:1px solid var(--border);">
+          <div style="font-size:9px;color:var(--muted);">Combined by <strong style="color:var(--amber);">Ensemble Scorer</strong> → weighted fusion → final anomaly score <strong style="color:var(--text);">0.00–1.00</strong></div>
+        </div>
+      </div>
+
+    </div><!-- end left-col -->
+
+    <!-- ══════ CENTER ══════ -->
+    <div class="center-col">
+
+      <!-- ANIMATED GAUGE -->
+      <div class="gauge-card">
+        <div class="gauge-title">
+          🎯 Live Risk Score Meter
+          <span class="eval-tag"><span class="live-dot"></span> LIVE · every 100ms</span>
+        </div>
+
+        <div class="gauge-svg-wrap">
+          <svg width="300" height="160" viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background arc segments -->
+            <!-- Low: green arc -->
+            <path d="M 30 140 A 120 120 0 0 1 90 35" stroke="#3ECF8E" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.25"/>
+            <!-- Medium: amber arc -->
+            <path d="M 90 35 A 120 120 0 0 1 210 35" stroke="#FFB547" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.25"/>
+            <!-- High: red arc -->
+            <path d="M 210 35 A 120 120 0 0 1 270 140" stroke="#FF5A5A" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.25"/>
+
+            <!-- Glow arcs (brighter thin overlay) -->
+            <path d="M 30 140 A 120 120 0 0 1 90 35" stroke="#3ECF8E" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8" filter="url(#glow-green)"/>
+            <path d="M 90 35 A 120 120 0 0 1 210 35" stroke="#FFB547" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8" filter="url(#glow-amber)"/>
+            <path d="M 210 35 A 120 120 0 0 1 270 140" stroke="#FF5A5A" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8" filter="url(#glow-red)"/>
+
+            <!-- Tick marks -->
+            <line x1="30" y1="140" x2="38" y2="133" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            <line x1="90" y1="35" x2="96" y2="42" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            <line x1="150" y1="20" x2="150" y2="29" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            <line x1="210" y1="35" x2="204" y2="42" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            <line x1="270" y1="140" x2="262" y2="133" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+
+            <!-- Tick labels -->
+            <text x="18" y="155" font-family="JetBrains Mono" font-size="9" fill="#8A8A9A">0.0</text>
+            <text x="76" y="28" font-family="JetBrains Mono" font-size="9" fill="#8A8A9A">0.3</text>
+            <text x="141" y="16" font-family="JetBrains Mono" font-size="9" fill="#8A8A9A">0.5</text>
+            <text x="203" y="28" font-family="JetBrains Mono" font-size="9" fill="#8A8A9A">0.7</text>
+            <text x="261" y="155" font-family="JetBrains Mono" font-size="9" fill="#8A8A9A">1.0</text>
+
+            <!-- Center hub -->
+            <circle cx="150" cy="140" r="10" fill="#1A1D26" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+            <circle cx="150" cy="140" r="5" fill="#FFB547" opacity="0.9"/>
+
+            <!-- NEEDLE -->
+            <g id="needle">
+              <line x1="150" y1="140" x2="150" y2="30" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.95"/>
+              <polygon points="150,24 147,36 153,36" fill="white" opacity="0.95"/>
+            </g>
+
+            <!-- Defs for glow filters -->
+            <defs>
+              <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="glow-amber" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="glow-red" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+          </svg>
+        </div>
+
+        <div class="score-readout">
+          <div class="sr-label">ANOMALY SCORE</div>
+          <div class="sr-val" id="scoreVal">0.18</div>
+          <div class="sr-conf">CONFIDENCE <span class="sr-conf-val" id="confVal">94%</span></div>
+        </div>
+
+        <div class="gauge-zones" style="margin-top:8px;">
+          <div class="gz gz-low">
+            <div class="gz-label">🟢 LOW</div>
+            <div class="gz-range">0.0 – 0.3</div>
+            <div class="gz-action">Allow session</div>
+          </div>
+          <div class="gz gz-med">
+            <div class="gz-label">🟡 MEDIUM</div>
+            <div class="gz-range">0.3 – 0.7</div>
+            <div class="gz-action">Step-up OTP</div>
+          </div>
+          <div class="gz gz-high">
+            <div class="gz-label">🔴 HIGH</div>
+            <div class="gz-range">0.7 – 1.0</div>
+            <div class="gz-action">Terminate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FLOW PIPELINE -->
+      <div class="flow-pipe">
+        <div class="flow-title">⚙️ End-to-End Pipeline Flow</div>
+        <div class="flow-steps">
+          <div class="flow-step fs-blue">
+            <div class="fs-icon">👤</div>
+            <div class="fs-name">User<br>Behavior</div>
+          </div>
+          <div class="flow-arrow">
+            <div class="fa-animated">▶</div>
+            <div class="fa-ms">100ms</div>
+          </div>
+          <div class="flow-step fs-teal">
+            <div class="fs-icon">📡</div>
+            <div class="fs-name">Data<br>Capture</div>
+          </div>
+          <div class="flow-arrow">
+            <div class="fa-animated" style="animation-delay:0.2s">▶</div>
+          </div>
+          <div class="flow-step fs-purple">
+            <div class="fs-icon">🧠</div>
+            <div class="fs-name">AI<br>Scoring</div>
+          </div>
+          <div class="flow-arrow">
+            <div class="fa-animated" style="animation-delay:0.4s">▶</div>
+          </div>
+          <div class="flow-step fs-amber">
+            <div class="fs-icon">🎯</div>
+            <div class="fs-name">Risk<br>Meter</div>
+          </div>
+          <div class="flow-arrow">
+            <div class="fa-animated" style="animation-delay:0.6s">▶</div>
+          </div>
+          <div class="flow-step fs-amber">
+            <div class="fs-icon">⚙️</div>
+            <div class="fs-name">Decision<br>Engine</div>
+          </div>
+          <div class="flow-arrow">
+            <div class="fa-animated" style="animation-delay:0.8s">▶</div>
+            <div class="fa-ms">&lt;200ms</div>
+          </div>
+          <div class="flow-step fs-green">
+            <div class="fs-icon">🛡️</div>
+            <div class="fs-name">Response<br>Action</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 SCENARIO CARDS -->
+      <div class="decision-row">
+
+        <!-- LOW -->
+        <div class="decision-card dc-low">
+          <div class="dc-top">
+            <div class="dc-icon">✅</div>
+            <div>
+              <div class="dc-badge">LOW RISK</div>
+              <div class="dc-range">Score: 0.00 – 0.30</div>
+            </div>
+          </div>
+          <div class="dc-score-bar"></div>
+          <div class="dc-scenario-label" style="margin-top:6px;">Scenario A — Normal User</div>
+          <div class="dc-signals">
+            <div class="dc-sig">Typing 72 WPM (baseline: 70 WPM)</div>
+            <div class="dc-sig">Smooth mouse, usual velocity</div>
+            <div class="dc-sig">Home city, known device</div>
+            <div class="dc-sig">Login 9:15 AM (typical window)</div>
+          </div>
+          <div class="dc-action-wrap">
+            <div class="dc-action-title">✅ Session Continues</div>
+            <div class="dc-action-detail">Zero friction — user never notices the system operating in the background.</div>
+          </div>
+        </div>
+
+        <!-- MEDIUM -->
+        <div class="decision-card dc-med">
+          <div class="dc-top">
+            <div class="dc-icon">⚠️</div>
+            <div>
+              <div class="dc-badge">MEDIUM RISK</div>
+              <div class="dc-range">Score: 0.31 – 0.69</div>
+            </div>
+          </div>
+          <div class="dc-score-bar"></div>
+          <div class="dc-scenario-label" style="margin-top:6px;">Scenario B — Suspicious Activity</div>
+          <div class="dc-signals">
+            <div class="dc-sig">Typing 120 WPM (50% above baseline)</div>
+            <div class="dc-sig">Erratic, unfamiliar mouse pattern</div>
+            <div class="dc-sig">Same city, slightly unfamiliar IP</div>
+            <div class="dc-sig">Login 2:00 AM (unusual)</div>
+          </div>
+          <div class="dc-action-wrap">
+            <div class="dc-action-title">🔐 Step-Up Auth Triggered</div>
+            <div class="dc-action-detail">OTP sent to registered number / email. Session paused until verified. Challenge escalates if ignored.</div>
+          </div>
+        </div>
+
+        <!-- HIGH -->
+        <div class="decision-card dc-high">
+          <div class="dc-top">
+            <div class="dc-icon">🚫</div>
+            <div>
+              <div class="dc-badge">HIGH RISK</div>
+              <div class="dc-range">Score: 0.70 – 1.00</div>
+            </div>
+          </div>
+          <div class="dc-score-bar"></div>
+          <div class="dc-scenario-label" style="margin-top:6px;">Scenario C — Session Hijack</div>
+          <div class="dc-signals">
+            <div class="dc-sig">Typing 220 WPM (robotic, automated)</div>
+            <div class="dc-sig">Straight-line pixel-perfect mouse</div>
+            <div class="dc-sig">Different country (VPN detected)</div>
+            <div class="dc-sig">Accessing admin routes immediately</div>
+          </div>
+          <div class="dc-action-wrap">
+            <div class="dc-action-title">🚫 Session Terminated</div>
+            <div class="dc-action-detail">Session killed instantly. Security alert fired. Event logged for model retraining. Admin notified.</div>
+          </div>
+        </div>
+
+      </div><!-- end decision-row -->
+
+    </div><!-- end center-col -->
+
+    <!-- ══════ RIGHT ══════ -->
+    <div class="right-col">
+
+      <!-- Decision Engine -->
+      <div class="de-block">
+        <div class="block-title bt-amber">⚙️ Decision Engine</div>
+
+        <div class="de-row">
+          <div class="de-ico">🧠</div>
+          <div class="de-txt"><strong>ML Output</strong> — anomaly score + confidence from LSTM + Random Forest ensemble</div>
+        </div>
+        <div class="de-row">
+          <div class="de-ico">📋</div>
+          <div class="de-txt"><strong>Rule-Based Logic</strong> — IP reputation, login time, failed attempt history</div>
+        </div>
+        <div class="de-row">
+          <div class="de-ico">🌐</div>
+          <div class="de-txt"><strong>Context Awareness</strong> — device familiarity, geo-location, session history</div>
+        </div>
+
+        <div class="thresh-box">
+          <div class="thresh-title">⚡ Dynamic Thresholds</div>
+          <div class="thresh-row">
+            <div class="thresh-dot" style="background:var(--teal)"></div>
+            <div class="thresh-txt"><strong>Known user + device</strong> → relaxed rules, wider tolerance band</div>
+          </div>
+          <div class="thresh-row">
+            <div class="thresh-dot" style="background:var(--amber)"></div>
+            <div class="thresh-txt"><strong>New device / IP</strong> → stricter rules, lower trigger threshold</div>
+          </div>
+          <div class="thresh-row">
+            <div class="thresh-dot" style="background:var(--red)"></div>
+            <div class="thresh-txt"><strong>VPN + location jump</strong> → near-instant high-risk flag</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time Intelligence -->
+      <div class="rt-block">
+        <div class="block-title" style="color:var(--cyan);">⚡ Real-Time Intel</div>
+        <div class="rt-row">
+          <div class="rt-icon">🔁</div>
+          <div class="rt-info">
+            <div class="rt-val">100ms</div>
+            <div class="rt-lbl">Evaluation cycle — score refreshed every 100ms throughout session</div>
+          </div>
+        </div>
+        <div class="rt-row">
+          <div class="rt-icon">⚡</div>
+          <div class="rt-info">
+            <div class="rt-val">&lt;200ms</div>
+            <div class="rt-lbl">Full pipeline response — capture → score → decision → action</div>
+          </div>
+        </div>
+        <div class="rt-row">
+          <div class="rt-icon">🎯</div>
+          <div class="rt-info">
+            <div class="rt-val">~95%</div>
+            <div class="rt-lbl">Detection accuracy across LSTM + RF ensemble</div>
+          </div>
+        </div>
+        <div class="rt-row">
+          <div class="rt-icon">✅</div>
+          <div class="rt-info">
+            <div class="rt-val">&lt;3%</div>
+            <div class="rt-lbl">False positive rate — legit users rarely challenged</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Continuous Learning -->
+      <div class="loop-block">
+        <div class="block-title bt-green">🔁 Continuous Learning Loop</div>
+        <div class="loop-steps">
+          <div class="loop-step">
+            <div class="loop-line-connector"></div>
+            <div class="loop-num">1</div>
+            <div class="loop-txt"><strong>Session events</strong> logged to MongoDB / PostgreSQL</div>
+          </div>
+          <div class="loop-step">
+            <div class="loop-line-connector"></div>
+            <div class="loop-num">2</div>
+            <div class="loop-txt"><strong>High-risk events</strong> labeled and added to training set</div>
+          </div>
+          <div class="loop-step">
+            <div class="loop-line-connector"></div>
+            <div class="loop-num">3</div>
+            <div class="loop-txt"><strong>Models retrained</strong> periodically on new behavioral data</div>
+          </div>
+          <div class="loop-step">
+            <div class="loop-num">4</div>
+            <div class="loop-txt"><strong>Updated model</strong> deployed — adapts to new attack patterns</div>
+          </div>
+        </div>
+        <div class="loop-badge"><span class="spin">⟳</span> System improves every cycle</div>
+      </div>
+
+      <!-- Security Layer -->
+      <div class="sec-block">
+        <div class="block-title bt-red">🔐 Security Layer</div>
+        <div class="sec-item">
+          <div class="sec-ico">🔒</div>
+          <div class="sec-info">
+            <div class="sec-name">Zero Trust Architecture</div>
+            <div class="sec-desc">Never trust, always verify — every request re-authenticated regardless of source or prior session</div>
+          </div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-ico">🔄</div>
+          <div class="sec-info">
+            <div class="sec-name">Continuous Authentication</div>
+            <div class="sec-desc">Identity verified throughout session, not just at login — ongoing behavioral validation</div>
+          </div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-ico">🛡️</div>
+          <div class="sec-info">
+            <div class="sec-name">End-to-End Encryption</div>
+            <div class="sec-desc">TLS 1.3 + AES-256. All data encrypted in transit and at rest</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end right-col -->
+
+  </div><!-- end main -->
+
+  <!-- ─── FOOTER ─── -->
+  <div class="footer">
+    <div class="footer-tag">CONTINUOUS AUTHENTICATION SYSTEM · v2.0</div>
+    <div class="footer-note"><em>"Risk is scored continuously — not once at login. The system watches, learns, and adapts in silence."</em></div>
+    <div class="footer-slide">05 / 06</div>
+  </div>
+
+</div>
+
+<script>
+// Animate the score readout to follow the needle sweep
+const scores = [
+  { score: 0.18, conf: 94, delay: 0 },
+  { score: 0.31, conf: 91, delay: 1200 },
+  { score: 0.54, conf: 88, delay: 2400 },
+  { score: 0.42, conf: 89, delay: 3200 },
+  { score: 0.76, conf: 92, delay: 4200 },
+  { score: 0.61, conf: 87, delay: 5200 },
+];
+
+let idx = 0;
+function animateScore() {
+  const s = scores[idx % scores.length];
+  document.getElementById('scoreVal').textContent = s.score.toFixed(2);
+  document.getElementById('confVal').textContent = s.conf + '%';
+  idx++;
+  setTimeout(animateScore, scores[(idx-1) % scores.length].delay + 1400);
+}
+animateScore();
+</script>
+</body>
+</html>

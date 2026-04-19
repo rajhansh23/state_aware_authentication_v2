@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Slide 7 – Advantages & Real-World Impact of AI-Based Security System</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:     #0D0F14;
+  --card:   #141720;
+  --border: rgba(255,255,255,0.08);
+  --text:   #F0EEE8;
+  --muted:  #8A8A9A;
+  --teal:   #00D4A4;
+  --purple: #9B6DFF;
+  --amber:  #FFB547;
+  --red:    #FF5A5A;
+  --green:  #3ECF8E;
+  --blue:   #4DA6FF;
+  --pink:   #FF6EB4;
+  --cyan:   #00E5FF;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
+
+.slide {
+  width: 1200px; margin: 0 auto; background: var(--bg);
+  position: relative; overflow: hidden; padding: 20px 38px 22px;
+}
+.slide::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 48px 48px; pointer-events: none; z-index: 0;
+}
+.blob { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.08; pointer-events: none; z-index: 0; }
+.blob-1 { width: 420px; height: 320px; background: var(--green);  top: -80px; left: -100px; }
+.blob-2 { width: 360px; height: 300px; background: var(--blue);   bottom: -60px; right: -80px; }
+.blob-3 { width: 300px; height: 240px; background: var(--purple); top: 220px; left: 36%; }
+.blob-4 { width: 260px; height: 200px; background: var(--amber);  bottom: 80px; left: 14%; }
+
+/* ─── HEADER ─── */
+.header {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 12px; padding-bottom: 11px; border-bottom: 1px solid var(--border);
+}
+.slide-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--green); background: rgba(62,207,142,0.1);
+  border: 1px solid rgba(62,207,142,0.25); border-radius: 20px; padding: 4px 12px; margin-bottom: 8px;
+}
+.slide-tag .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+h1 span { color: var(--green); }
+.subtitle { font-size: 10.5px; color: var(--muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.hdr-pills { display: flex; gap: 7px; align-items: flex-start; padding-top: 2px; flex-wrap: wrap; justify-content: flex-end; max-width: 380px; }
+.hdr-pill { text-align: center; padding: 5px 13px; border-radius: 10px; border: 1px solid; }
+.hp-green  { border-color: rgba(62,207,142,0.3);  background: rgba(62,207,142,0.06); }
+.hp-blue   { border-color: rgba(77,166,255,0.3);   background: rgba(77,166,255,0.06); }
+.hp-amber  { border-color: rgba(255,181,71,0.3);   background: rgba(255,181,71,0.06); }
+.hp-cyan   { border-color: rgba(0,229,255,0.3);    background: rgba(0,229,255,0.06); }
+.hp-purple { border-color: rgba(155,109,255,0.3);  background: rgba(155,109,255,0.06); }
+.hp-val { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.hp-lbl { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 1px; }
+.hp-green  .hp-val { color: var(--green); }
+.hp-blue   .hp-val { color: var(--blue); }
+.hp-amber  .hp-val { color: var(--amber); }
+.hp-cyan   .hp-val { color: var(--cyan); }
+.hp-purple .hp-val { color: var(--purple); }
+
+/* ─── SECTION LABELS ─── */
+.sec-label {
+  position: relative; z-index: 1;
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
+  display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
+}
+.sec-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.sl-green  { color: var(--green); }
+.sl-blue   { color: var(--blue); }
+.sl-amber  { color: var(--amber); }
+
+/* ─── TOP METRICS STRIP ─── */
+.metrics-strip {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(62,207,142,0.15);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 10px;
+}
+.metrics-strip::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--teal), var(--blue), var(--purple), var(--amber));
+  border-radius: 10px 10px 0 0;
+}
+.metrics-row { display: flex; gap: 8px; align-items: stretch; }
+.metric-card {
+  flex: 1; border-radius: 9px; border: 1px solid; padding: 10px 10px 8px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.metric-card::before {
+  content: ''; position: absolute; inset: 0; opacity: 0.03;
+  background: radial-gradient(circle at 50% 0%, white, transparent 70%);
+}
+.mc-green  { border-color: rgba(62,207,142,0.25);  background: rgba(62,207,142,0.05); }
+.mc-blue   { border-color: rgba(77,166,255,0.25);   background: rgba(77,166,255,0.05); }
+.mc-amber  { border-color: rgba(255,181,71,0.25);   background: rgba(255,181,71,0.05); }
+.mc-cyan   { border-color: rgba(0,229,255,0.25);    background: rgba(0,229,255,0.05); }
+.mc-purple { border-color: rgba(155,109,255,0.25);  background: rgba(155,109,255,0.05); }
+.m-icon  { font-size: 15px; display: block; margin-bottom: 3px; }
+.m-val   { font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.m-lbl   { font-size: 8.5px; color: var(--muted); margin-top: 4px; line-height: 1.3; text-transform: uppercase; letter-spacing: 0.06em; }
+.mc-green  .m-val { color: var(--green);  text-shadow: 0 0 18px rgba(62,207,142,0.5); }
+.mc-blue   .m-val { color: var(--blue);   text-shadow: 0 0 18px rgba(77,166,255,0.5); }
+.mc-amber  .m-val { color: var(--amber);  text-shadow: 0 0 18px rgba(255,181,71,0.5); }
+.mc-cyan   .m-val { color: var(--cyan);   text-shadow: 0 0 18px rgba(0,229,255,0.5); }
+.mc-purple .m-val { color: var(--purple); text-shadow: 0 0 18px rgba(155,109,255,0.5); }
+
+/* ─── MIDDLE: CORE ADVANTAGES GRID ─── */
+.adv-grid {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px;
+}
+.adv-card {
+  border-radius: 10px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.025); padding: 10px 11px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s;
+}
+.adv-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 10px 10px 0 0;
+}
+.ac-green::before  { background: linear-gradient(90deg, var(--green), var(--teal)); }
+.ac-blue::before   { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+.ac-amber::before  { background: linear-gradient(90deg, var(--amber), var(--pink)); }
+.ac-purple::before { background: linear-gradient(90deg, var(--purple), var(--blue)); }
+.ac-cyan::before   { background: linear-gradient(90deg, var(--cyan), var(--green)); }
+.ac-red::before    { background: linear-gradient(90deg, var(--red), var(--amber)); }
+
+.adv-top { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.adv-icon { font-size: 16px; flex-shrink: 0; }
+.adv-title { font-size: 11.5px; font-weight: 700; }
+.ac-green  .adv-title { color: var(--green); }
+.ac-blue   .adv-title { color: var(--blue); }
+.ac-amber  .adv-title { color: var(--amber); }
+.ac-purple .adv-title { color: var(--purple); }
+.ac-cyan   .adv-title { color: var(--cyan); }
+.ac-red    .adv-title { color: var(--red); }
+
+.adv-desc { font-size: 9.5px; color: var(--muted); line-height: 1.5; margin-bottom: 5px; }
+.adv-points { display: flex; flex-direction: column; gap: 3px; }
+.adv-point {
+  font-size: 8.5px; display: flex; align-items: flex-start; gap: 5px; line-height: 1.4;
+}
+.adv-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.ac-green  .adv-dot { background: var(--green); }
+.ac-blue   .adv-dot { background: var(--blue); }
+.ac-amber  .adv-dot { background: var(--amber); }
+.ac-purple .adv-dot { background: var(--purple); }
+.ac-cyan   .adv-dot { background: var(--cyan); }
+.ac-red    .adv-dot { background: var(--red); }
+
+/* ─── BOTTOM ROW: REAL-WORLD IMPACT ─── */
+.bottom-row {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 2fr 1.2fr 1.2fr; gap: 8px; margin-bottom: 10px;
+}
+
+/* Impact sectors panel */
+.impact-panel {
+  border-radius: 10px; border: 1px solid rgba(77,166,255,0.2);
+  background: rgba(77,166,255,0.03); padding: 10px 12px;
+  position: relative; overflow: hidden;
+}
+.impact-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--blue), var(--cyan), var(--purple));
+  border-radius: 10px 10px 0 0;
+}
+.panel-title {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.pt-blue   { color: var(--blue); }
+.pt-amber  { color: var(--amber); }
+.pt-green  { color: var(--green); }
+
+.sector-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sector-card {
+  border-radius: 8px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03); padding: 8px 9px;
+}
+.sec-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.sec-icon { font-size: 14px; }
+.sec-name { font-size: 10px; font-weight: 700; }
+.s-blue   .sec-name { color: var(--blue); }
+.s-amber  .sec-name { color: var(--amber); }
+.s-teal   .sec-name { color: var(--teal); }
+.s-pink   .sec-name { color: var(--pink); }
+.sec-detail { font-size: 8.5px; color: var(--muted); line-height: 1.4; }
+
+/* Business value panel */
+.biz-panel {
+  border-radius: 10px; border: 1px solid rgba(255,181,71,0.2);
+  background: rgba(255,181,71,0.03); padding: 10px 12px;
+  position: relative; overflow: hidden;
+}
+.biz-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--amber), var(--pink));
+  border-radius: 10px 10px 0 0;
+}
+.biz-row {
+  display: flex; align-items: flex-start; gap: 8px; padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.biz-row:last-child { border-bottom: none; padding-bottom: 0; }
+.biz-ico { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.biz-info {}
+.biz-name { font-size: 9.5px; font-weight: 700; color: var(--amber); }
+.biz-desc { font-size: 8.5px; color: var(--muted); line-height: 1.4; margin-top: 1px; }
+
+/* Security strength panel */
+.sec-panel {
+  border-radius: 10px; border: 1px solid rgba(62,207,142,0.2);
+  background: rgba(62,207,142,0.03); padding: 10px 12px;
+  position: relative; overflow: hidden;
+}
+.sec-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--teal));
+  border-radius: 10px 10px 0 0;
+}
+.strength-item {
+  border-radius: 8px; border: 1px solid rgba(62,207,142,0.15);
+  background: rgba(62,207,142,0.04); padding: 7px 9px; margin-bottom: 6px;
+}
+.strength-item:last-child { margin-bottom: 0; }
+.str-top { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.str-icon { font-size: 12px; }
+.str-name { font-size: 9.5px; font-weight: 700; color: var(--green); }
+.str-desc { font-size: 8.5px; color: var(--muted); line-height: 1.4; }
+
+/* ─── FOOTER BANNER ─── */
+.footer-banner {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+  border-radius: 9px; padding: 8px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fb-quote {
+  font-size: 9.5px; color: var(--muted); font-style: italic;
+  font-family: 'JetBrains Mono', monospace;
+}
+.fb-quote strong { color: var(--text); font-style: normal; }
+.fb-badges { display: flex; gap: 6px; }
+.fb-badge {
+  font-size: 8.5px; font-weight: 600; padding: 3px 9px; border-radius: 9px;
+  border: 1px solid; font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── FOOTER ─── */
+.footer {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--border);
+}
+.footer-tag { font-size: 8.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.footer-note { font-size: 9px; color: var(--muted); font-style: italic; }
+.footer-slide { font-size: 11px; font-weight: 700; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <!-- Blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+
+  <!-- ─── HEADER ─── -->
+  <div class="header">
+    <div>
+      <div class="slide-tag"><span class="dot"></span> Slide 7 · AI Security System</div>
+      <h1>Advantages &amp; <span>Real-World Impact</span></h1>
+      <div class="subtitle">// why this system actually matters — in plain, simple terms</div>
+    </div>
+    <div class="hdr-pills">
+      <div class="hdr-pill hp-green">
+        <div class="hp-val">~70%</div>
+        <div class="hp-lbl">Faster Detection</div>
+      </div>
+      <div class="hdr-pill hp-blue">
+        <div class="hp-val">~95%</div>
+        <div class="hp-lbl">Accuracy</div>
+      </div>
+      <div class="hdr-pill hp-cyan">
+        <div class="hp-val">&lt;200ms</div>
+        <div class="hp-lbl">Response Time</div>
+      </div>
+      <div class="hdr-pill hp-amber">
+        <div class="hp-val">~60%</div>
+        <div class="hp-lbl">Fraud Reduction</div>
+      </div>
+      <div class="hdr-pill hp-purple">
+        <div class="hp-val">24/7</div>
+        <div class="hp-lbl">Monitoring</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TOP: KEY PERFORMANCE METRICS ─── -->
+  <div class="sec-label sl-green">⚡ Key Performance Metrics</div>
+  <div class="metrics-strip">
+    <div class="metrics-row">
+      <div class="metric-card mc-green">
+        <span class="m-icon">⚡</span>
+        <div class="m-val">~70%</div>
+        <div class="m-lbl">Faster Threat<br/>Detection</div>
+      </div>
+      <div class="metric-card mc-blue">
+        <span class="m-icon">🎯</span>
+        <div class="m-val">~95%</div>
+        <div class="m-lbl">Detection<br/>Accuracy</div>
+      </div>
+      <div class="metric-card mc-cyan">
+        <span class="m-icon">⏱️</span>
+        <div class="m-val">&lt;200ms</div>
+        <div class="m-lbl">Threat Response<br/>Time</div>
+      </div>
+      <div class="metric-card mc-purple">
+        <span class="m-icon">🔄</span>
+        <div class="m-val">24/7</div>
+        <div class="m-lbl">Continuous<br/>Monitoring</div>
+      </div>
+      <div class="metric-card mc-amber">
+        <span class="m-icon">🔻</span>
+        <div class="m-val">~60%</div>
+        <div class="m-lbl">Fraud Loss<br/>Reduction</div>
+      </div>
+      <div class="metric-card mc-green" style="border-color:rgba(255,90,90,0.25);background:rgba(255,90,90,0.05)">
+        <span class="m-icon">🔐</span>
+        <div class="m-val" style="color:var(--red);text-shadow:0 0 18px rgba(255,90,90,0.5)">0</div>
+        <div class="m-lbl">Extra Logins for<br/>Legit Users</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MIDDLE: CORE ADVANTAGES ─── -->
+  <div class="sec-label sl-blue">🧠 Core Advantages — What Makes This System Special</div>
+  <div class="adv-grid">
+
+    <div class="adv-card ac-green">
+      <div class="adv-top">
+        <div class="adv-icon">🛡️</div>
+        <div class="adv-title">Eliminates Session Vulnerability</div>
+      </div>
+      <div class="adv-desc">Even if a hacker steals your login credentials, they still can't misuse the session — because the system watches <em>how</em> you behave, not just who you are.</div>
+      <div class="adv-points">
+        <div class="adv-point"><div class="adv-dot"></div><span>Protects after login — stolen passwords become useless</span></div>
+        <div class="adv-point"><div class="adv-dot"></div><span>Continuous behavioral check throughout session</span></div>
+      </div>
+    </div>
+
+    <div class="adv-card ac-blue">
+      <div class="adv-top">
+        <div class="adv-icon">👤</div>
+        <div class="adv-title">Transparent to Legitimate Users</div>
+      </div>
+      <div class="adv-desc">Normal users never know the security is running. No annoying OTPs, no repeated logins — it all happens invisibly in the background.</div>
+      <div class="adv-points">
+        <div class="adv-point"><div class="adv-dot"></div><span>Zero friction — smooth, uninterrupted experience</span></div>
+        <div class="adv-point"><div class="adv-dot"></div><span>Security runs silently without bothering real users</span></div>
+      </div>
+    </div>
+
+    <div class="adv-card ac-amber">
+      <div class="adv-top">
+        <div class="adv-icon">⚡</div>
+        <div class="adv-title">Real-Time Threat Response</div>
+      </div>
+      <div class="adv-desc">The moment something suspicious happens, the system reacts — not in hours, not in minutes — in milliseconds. Attackers are stopped before they can do damage.</div>
+      <div class="adv-points">
+        <div class="adv-point"><div class="adv-dot"></div><span>Anomaly flagged and blocked in &lt;200ms</span></div>
+        <div class="adv-point"><div class="adv-dot"></div><span>Auto-triggers step-up auth or session termination</span></div>
+      </div>
+    </div>
+
+    <div class="adv-card ac-purple">
+      <div class="adv-top">
+        <div class="adv-icon">🤖</div>
+        <div class="adv-title">Self-Learning ML Models</div>
+      </div>
+      <div class="adv-desc">The AI doesn't stay stuck with old rules. It keeps learning from new attack patterns over time, so it gets smarter and more accurate the longer it runs.</div>
+      <div class="adv-points">
+        <div class="adv-point"><div class="adv-dot"></div><span>Accuracy improves with every new attack it sees</span></div>
+        <div class="adv-point"><div class="adv-dot"></div><span>Adapts to evolving threats — no manual rule updates</span></div>
+      </div>
+    </div>
+
+    <div class="adv-card ac-cyan">
+      <div class="adv-top">
+        <div class="adv-icon">📱</div>
+        <div class="adv-title">Works Across All Platforms</div>
+      </div>
+      <div class="adv-desc">Whether the user is on a laptop browser, a mobile app, or a desktop — the system tracks and protects consistently across all of them.</div>
+      <div class="adv-points">
+        <div class="adv-point"><div class="adv-dot"></div><span>Browser · Mobile · Desktop — all covered</span></div>
+        <div class="adv-point"><div class="adv-dot"></div><span>Unified behavioral fingerprint per user</span></div>
+      </div>
+    </div>
+
+    <div class="adv-card ac-red">
+      <div class="adv-top">
+        <div class="adv-icon">📋</div>
+        <div class="adv-title">Audit-Ready Compliance Logs</div>
+      </div>
+      <div class="adv-desc">Every security decision — every risk score, every block, every session flag — is logged with full context. This makes it easy to explain decisions during audits.</div>
+      <div class="adv-points">
+        <div class="adv-point"><div class="adv-dot"></div><span>Immutable logs ready for GDPR &amp; SOC2 audits</span></div>
+        <div class="adv-point"><div class="adv-dot"></div><span>Full decision trail — who, when, why, what risk</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── BOTTOM ROW: REAL-WORLD IMPACT + BUSINESS VALUE + SECURITY STRENGTH ─── -->
+  <div class="sec-label sl-amber">🚀 Real-World Impact, Business Value &amp; Security Strength</div>
+  <div class="bottom-row">
+
+    <!-- Real-World Impact Sectors -->
+    <div class="impact-panel">
+      <div class="panel-title pt-blue">🌍 Where This System Is Used</div>
+      <div class="sector-grid">
+
+        <div class="sector-card s-blue">
+          <div class="sec-top"><div class="sec-icon">🏦</div><div class="sec-name">Banking Systems</div></div>
+          <div class="sec-detail">Prevents unauthorized transactions. If someone logs in from an unusual location or changes typing speed, the system flags it immediately — before any money moves.</div>
+        </div>
+
+        <div class="sector-card s-amber">
+          <div class="sec-top"><div class="sec-icon">🛒</div><div class="sec-name">E-Commerce Platforms</div></div>
+          <div class="sec-detail">Protects user accounts and payments. Stops attackers who hijack sessions right after login to place fraudulent orders or change delivery addresses.</div>
+        </div>
+
+        <div class="sector-card s-teal">
+          <div class="sec-top"><div class="sec-icon">🏢</div><div class="sec-name">Enterprise Security</div></div>
+          <div class="sec-detail">Secures employee access to internal systems. Even if an employee's laptop is stolen, behavioral mismatch triggers a lockout within seconds.</div>
+        </div>
+
+        <div class="sector-card s-pink">
+          <div class="sec-top"><div class="sec-icon">🏥</div><div class="sec-name">Healthcare Portals</div></div>
+          <div class="sec-detail">Protects sensitive patient records. Detects when an unauthorized person accesses medical data — even if they have the correct credentials.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Business Value -->
+    <div class="biz-panel">
+      <div class="panel-title pt-amber">💼 Business Value</div>
+
+      <div class="biz-row">
+        <div class="biz-ico">💰</div>
+        <div class="biz-info">
+          <div class="biz-name">Cuts Manual Verification Cost</div>
+          <div class="biz-desc">No need for support agents to handle repeated OTPs or suspicious login reviews — system handles it automatically.</div>
+        </div>
+      </div>
+
+      <div class="biz-row">
+        <div class="biz-ico">😊</div>
+        <div class="biz-info">
+          <div class="biz-name">Better User Experience</div>
+          <div class="biz-desc">Fewer interruptions = happier customers. Less OTPs, less friction, same (or better) level of security.</div>
+        </div>
+      </div>
+
+      <div class="biz-row">
+        <div class="biz-ico">🤝</div>
+        <div class="biz-info">
+          <div class="biz-name">Improves Customer Trust</div>
+          <div class="biz-desc">When users know their account is actively protected even after login, they trust the platform more.</div>
+        </div>
+      </div>
+
+      <div class="biz-row">
+        <div class="biz-ico">📜</div>
+        <div class="biz-info">
+          <div class="biz-name">Regulatory Compliance</div>
+          <div class="biz-desc">Audit-ready logs help meet GDPR, SOC2, and PCI-DSS requirements without extra manual documentation effort.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Security Strength -->
+    <div class="sec-panel">
+      <div class="panel-title pt-green">🔐 Security Strength</div>
+
+      <div class="strength-item">
+        <div class="str-top"><div class="str-icon">🏯</div><div class="str-name">Zero Trust Architecture</div></div>
+        <div class="str-desc">Never trust, always verify — even logged-in users are continuously checked. No one gets a free pass just because they signed in.</div>
+      </div>
+
+      <div class="strength-item">
+        <div class="str-top"><div class="str-icon">🔁</div><div class="str-name">Continuous Authentication</div></div>
+        <div class="str-desc">Authentication doesn't stop at login — it's an ongoing process throughout the entire session, every second.</div>
+      </div>
+
+      <div class="strength-item">
+        <div class="str-top"><div class="str-icon">🧬</div><div class="str-name">Behavioral Biometrics</div></div>
+        <div class="str-desc">Mouse movement, typing speed, scroll patterns — extremely hard to fake. Even if an attacker copies your password, they can't copy your behavior.</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ─── FOOTER BANNER ─── -->
+  <div class="footer-banner">
+    <div class="fb-quote">
+      <strong>Bottom Line:</strong> This system makes security invisible to honest users, but impossible to bypass for attackers — that's the goal of any great security system.
+    </div>
+    <div class="fb-badges">
+      <span class="fb-badge" style="color:var(--green);border-color:rgba(62,207,142,0.3);background:rgba(62,207,142,0.07)">Self-Learning AI</span>
+      <span class="fb-badge" style="color:var(--blue);border-color:rgba(77,166,255,0.3);background:rgba(77,166,255,0.07)">Zero Trust</span>
+      <span class="fb-badge" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">GDPR Ready</span>
+      <span class="fb-badge" style="color:var(--cyan);border-color:rgba(0,229,255,0.3);background:rgba(0,229,255,0.07)">&lt;200ms</span>
+      <span class="fb-badge" style="color:var(--purple);border-color:rgba(155,109,255,0.3);background:rgba(155,109,255,0.07)">Behavioral Biometrics</span>
+    </div>
+  </div>
+
+  <!-- ─── FOOTER ─── -->
+  <div class="footer">
+    <div class="footer-tag">CONTINUOUS AUTHENTICATION SYSTEM · v2.0</div>
+    <div class="footer-note"><em>"Security so smart, the user never notices — but the attacker always does."</em></div>
+    <div class="footer-slide">07 / 07</div>
+  </div>
+
+</div>
+</body>
+</html>

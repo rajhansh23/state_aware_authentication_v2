@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Security System: Technology Stack & ML Pipeline Workflow</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #0D0F14;
+  --card:   #141720;
+  --border: rgba(255,255,255,0.08);
+  --text:   #F0EEE8;
+  --muted:  #8A8A9A;
+  --teal:   #00D4A4;
+  --purple: #9B6DFF;
+  --amber:  #FFB547;
+  --red:    #FF5A5A;
+  --green:  #3ECF8E;
+  --blue:   #4DA6FF;
+  --pink:   #FF6EB4;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+}
+
+.slide {
+  width: 1200px;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  padding: 24px 40px 28px;
+}
+
+.slide::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+.blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.09; pointer-events: none; z-index: 0; }
+.blob-1 { width: 420px; height: 300px; background: var(--teal);   top: -60px; left: -80px; }
+.blob-2 { width: 340px; height: 280px; background: var(--purple); bottom: 80px; right: -60px; }
+.blob-3 { width: 280px; height: 220px; background: var(--amber);  top: 300px; left: 35%; }
+.blob-4 { width: 250px; height: 200px; background: var(--blue);   bottom: 0; left: 10%; }
+
+/* ─── HEADER ─── */
+.header {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 16px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.slide-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--teal); background: rgba(0,212,164,0.1);
+  border: 1px solid rgba(0,212,164,0.25); border-radius: 20px; padding: 4px 12px; margin-bottom: 8px;
+}
+.slide-tag .dot { width: 6px; height: 6px; background: var(--teal); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+h1 span { color: var(--teal); }
+.subtitle { font-size: 11.5px; color: var(--muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+.header-right {
+  display: flex; align-items: flex-start; gap: 10px;
+}
+
+/* ─── METRICS BOX ─── */
+.metrics-box {
+  background: rgba(0,212,164,0.05);
+  border: 1px solid rgba(0,212,164,0.2);
+  border-radius: 10px;
+  padding: 8px 14px;
+  display: flex; gap: 16px;
+}
+.metric-item { text-align: center; }
+.metric-val { font-size: 15px; font-weight: 700; color: var(--teal); font-family: 'JetBrains Mono', monospace; }
+.metric-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 1px; }
+.metric-divider { width: 1px; background: var(--border); }
+
+/* ─── MAIN LAYOUT: pipeline + side panel ─── */
+.main-layout {
+  position: relative; z-index: 1;
+  display: flex; gap: 12px;
+}
+
+/* ─── LEFT: PIPELINE ─── */
+.pipeline-col {
+  flex: 1;
+  display: flex; flex-direction: column; gap: 0;
+}
+
+/* Pipeline step */
+.p-step {
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,0.02);
+}
+.p-step::before {
+  content: '';
+  position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+  border-radius: 11px 0 0 11px;
+}
+
+.step-teal  { border-color: rgba(0,212,164,0.2);  background: rgba(0,212,164,0.03); }
+.step-teal::before  { background: var(--teal); }
+.step-blue  { border-color: rgba(77,166,255,0.2);  background: rgba(77,166,255,0.03); }
+.step-blue::before  { background: var(--blue); }
+.step-amber { border-color: rgba(255,181,71,0.2);  background: rgba(255,181,71,0.03); }
+.step-amber::before { background: var(--amber); }
+.step-purple{ border-color: rgba(155,109,255,0.2); background: rgba(155,109,255,0.03); }
+.step-purple::before{ background: var(--purple); }
+.step-green { border-color: rgba(62,207,142,0.2);  background: rgba(62,207,142,0.03); }
+.step-green::before { background: var(--green); }
+.step-pink  { border-color: rgba(255,110,180,0.2); background: rgba(255,110,180,0.03); }
+.step-pink::before  { background: var(--pink); }
+.step-red   { border-color: rgba(255,90,90,0.2);   background: rgba(255,90,90,0.03); }
+.step-red::before   { background: var(--red); }
+
+.step-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+}
+.step-num {
+  width: 20px; height: 20px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.num-teal   { background: rgba(0,212,164,0.15); color: var(--teal); border: 1px solid rgba(0,212,164,0.3); }
+.num-blue   { background: rgba(77,166,255,0.15); color: var(--blue); border: 1px solid rgba(77,166,255,0.3); }
+.num-amber  { background: rgba(255,181,71,0.15); color: var(--amber); border: 1px solid rgba(255,181,71,0.3); }
+.num-purple { background: rgba(155,109,255,0.15); color: var(--purple); border: 1px solid rgba(155,109,255,0.3); }
+.num-green  { background: rgba(62,207,142,0.15); color: var(--green); border: 1px solid rgba(62,207,142,0.3); }
+.num-pink   { background: rgba(255,110,180,0.15); color: var(--pink); border: 1px solid rgba(255,110,180,0.3); }
+.num-red    { background: rgba(255,90,90,0.15); color: var(--red); border: 1px solid rgba(255,90,90,0.3); }
+
+.step-icon { font-size: 16px; }
+.step-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.02em; flex: 1;
+}
+.teal-title   { color: var(--teal); }
+.blue-title   { color: var(--blue); }
+.amber-title  { color: var(--amber); }
+.purple-title { color: var(--purple); }
+.green-title  { color: var(--green); }
+.pink-title   { color: var(--pink); }
+.red-title    { color: var(--red); }
+
+.step-body {
+  display: flex; gap: 10px; align-items: flex-start; padding-left: 28px;
+}
+.step-body-full { padding-left: 28px; }
+.step-desc { font-size: 10.5px; color: var(--muted); line-height: 1.45; flex: 1; }
+.step-benefit {
+  font-size: 10px; color: var(--text);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px; padding: 4px 8px; white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* inline tech tags */
+.tech-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.t-tag {
+  font-size: 9px; font-family: 'JetBrains Mono', monospace; font-weight: 500;
+  padding: 2px 7px; border-radius: 4px; border: 1px solid;
+}
+.tt-teal   { color: var(--teal);   border-color: rgba(0,212,164,0.3);  background: rgba(0,212,164,0.07); }
+.tt-blue   { color: var(--blue);   border-color: rgba(77,166,255,0.3);  background: rgba(77,166,255,0.07); }
+.tt-amber  { color: var(--amber);  border-color: rgba(255,181,71,0.3);  background: rgba(255,181,71,0.07); }
+.tt-purple { color: var(--purple); border-color: rgba(155,109,255,0.3); background: rgba(155,109,255,0.07); }
+.tt-green  { color: var(--green);  border-color: rgba(62,207,142,0.3);  background: rgba(62,207,142,0.07); }
+.tt-pink   { color: var(--pink);   border-color: rgba(255,110,180,0.3); background: rgba(255,110,180,0.07); }
+.tt-red    { color: var(--red);    border-color: rgba(255,90,90,0.3);   background: rgba(255,90,90,0.07); }
+.tt-muted  { color: var(--muted);  border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); }
+
+/* ML triple split */
+.ml-split {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px;
+  padding-left: 28px; margin-top: 5px;
+}
+.ml-mini {
+  border-radius: 8px; padding: 8px 9px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.ml-mini-head { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+.ml-mini-icon { font-size: 13px; }
+.ml-mini-name { font-size: 10px; font-weight: 700; }
+.ml-mini-full { font-size: 9px; color: var(--muted); line-height: 1.3; margin-bottom: 3px; }
+.ml-mini-benefit { font-size: 9px; color: var(--text); font-style: italic; }
+
+.ml-lstm   { border-color: rgba(155,109,255,0.25); background: rgba(155,109,255,0.04); }
+.ml-rf     { border-color: rgba(62,207,142,0.25);  background: rgba(62,207,142,0.04); }
+.ml-ens    { border-color: rgba(255,181,71,0.25);  background: rgba(255,181,71,0.04); }
+
+/* Connector arrow */
+.conn {
+  display: flex; align-items: center; padding: 3px 0 3px 18px; gap: 6px;
+}
+.conn-line {
+  width: 1px; height: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+}
+.conn-arrow { font-size: 9px; color: var(--muted); }
+.conn-label { font-size: 9px; color: var(--muted); font-family: 'JetBrains Mono', monospace; font-style: italic; }
+
+/* Response split: 3 columns */
+.response-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px;
+  padding-left: 28px; margin-top: 5px;
+}
+.resp-card {
+  border-radius: 8px; padding: 7px 9px;
+  border: 1px solid;
+  text-align: center;
+}
+.resp-low    { border-color: rgba(0,212,164,0.3); background: rgba(0,212,164,0.05); }
+.resp-med    { border-color: rgba(255,181,71,0.3); background: rgba(255,181,71,0.05); }
+.resp-high   { border-color: rgba(255,90,90,0.3);  background: rgba(255,90,90,0.05); }
+.resp-icon   { font-size: 16px; margin-bottom: 3px; }
+.resp-level  { font-size: 10px; font-weight: 700; margin-bottom: 2px; }
+.resp-action { font-size: 10px; color: var(--text); }
+.resp-range  { font-size: 9px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+
+/* Continuous learning loop label */
+.loop-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9.5px; color: var(--green);
+  background: rgba(62,207,142,0.08);
+  border: 1px solid rgba(62,207,142,0.2);
+  border-radius: 12px; padding: 3px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 5px;
+}
+
+/* ─── RIGHT: SIDE PANEL ─── */
+.side-col {
+  width: 270px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.side-section {
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.02);
+  position: relative; overflow: hidden;
+}
+.side-section::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 11px 11px 0 0;
+}
+.ss-teal::before   { background: linear-gradient(90deg, var(--teal), transparent); }
+.ss-purple::before { background: linear-gradient(90deg, var(--purple), transparent); }
+.ss-amber::before  { background: linear-gradient(90deg, var(--amber), transparent); }
+.ss-blue::before   { background: linear-gradient(90deg, var(--blue), transparent); }
+.ss-green::before  { background: linear-gradient(90deg, var(--green), transparent); }
+
+.side-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+}
+.st-teal   { color: var(--teal); }
+.st-purple { color: var(--purple); }
+.st-amber  { color: var(--amber); }
+.st-blue   { color: var(--blue); }
+.st-green  { color: var(--green); }
+
+.stack-row {
+  display: flex; align-items: flex-start; gap: 6px; margin-bottom: 5px;
+}
+.stack-row:last-child { margin-bottom: 0; }
+.stack-cat {
+  font-size: 9px; font-weight: 600; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.06em; white-space: nowrap; padding-top: 1px;
+  min-width: 52px;
+}
+.stack-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+.s-tag {
+  font-size: 9px; font-family: 'JetBrains Mono', monospace;
+  padding: 2px 6px; border-radius: 4px; border: 1px solid;
+}
+
+/* ─── RISK METER ─── */
+.risk-meter {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 10px 12px;
+  position: relative; overflow: hidden;
+}
+.risk-meter::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--amber), var(--red));
+  border-radius: 11px 11px 0 0;
+}
+.risk-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+}
+.risk-bar-wrap { margin-bottom: 4px; }
+.risk-bar {
+  height: 10px; border-radius: 5px;
+  background: linear-gradient(90deg, var(--green) 0%, var(--amber) 50%, var(--red) 100%);
+  position: relative;
+  box-shadow: 0 0 10px rgba(0,212,164,0.3), 0 0 20px rgba(255,90,90,0.15);
+}
+.risk-bar-labels {
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+  margin-top: 3px;
+}
+.risk-zones {
+  display: flex; gap: 5px; margin-top: 7px;
+}
+.risk-zone {
+  flex: 1; border-radius: 6px; padding: 4px 5px; text-align: center; border: 1px solid;
+}
+.rz-low  { border-color: rgba(0,212,164,0.3); background: rgba(0,212,164,0.07); }
+.rz-med  { border-color: rgba(255,181,71,0.3); background: rgba(255,181,71,0.07); }
+.rz-high { border-color: rgba(255,90,90,0.3);  background: rgba(255,90,90,0.07); }
+.rz-label { font-size: 9px; font-weight: 700; }
+.rz-low  .rz-label { color: var(--teal); }
+.rz-med  .rz-label { color: var(--amber); }
+.rz-high .rz-label { color: var(--red); }
+.rz-action { font-size: 9px; color: var(--muted); }
+
+/* ─── GLOSSARY BOX ─── */
+.glossary {
+  background: rgba(77,166,255,0.03);
+  border: 1px solid rgba(77,166,255,0.15);
+  border-radius: 11px;
+  padding: 9px 12px;
+}
+.glossary-title {
+  font-size: 10px; font-weight: 700; color: var(--blue); text-transform: uppercase;
+  letter-spacing: 0.1em; margin-bottom: 7px; display: flex; align-items: center; gap: 5px;
+}
+.glos-item { margin-bottom: 5px; }
+.glos-item:last-child { margin-bottom: 0; }
+.glos-term { font-size: 10px; font-weight: 600; color: var(--text); }
+.glos-def  { font-size: 9.5px; color: var(--muted); line-height: 1.35; }
+
+/* ─── FOOTER ─── */
+.footer {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.footer-tag { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; }
+.footer-note { font-size: 10px; color: var(--muted); font-style: italic; }
+.footer-slide { font-size: 11px; font-weight: 600; color: var(--teal); font-family: 'JetBrains Mono', monospace; }
+
+/* ─── MINI TERM TOOLTIP-STYLE EXPLAINER ─── */
+.inline-def {
+  font-size: 9px; color: var(--blue); font-style: italic;
+  display: inline;
+}
+</style>
+</head>
+<body>
+
+<div class="slide">
+  <!-- Background effects -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+
+  <!-- ─── HEADER ─── -->
+  <div class="header">
+    <div>
+      <div class="slide-tag"><span class="dot"></span> AI Security System · Slide 04</div>
+      <h1>Technology Stack &amp; <span>ML Pipeline</span> Workflow</h1>
+      <div class="subtitle">// end-to-end data flow from capture → decision → response → continuous learning</div>
+    </div>
+    <div class="header-right">
+      <div class="metrics-box">
+        <div class="metric-item">
+          <div class="metric-val">~95%</div>
+          <div class="metric-label">Accuracy</div>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <div class="metric-val">&lt;200ms</div>
+          <div class="metric-label">Response</div>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <div class="metric-val">&lt;3%</div>
+          <div class="metric-label">False +ve</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MAIN ─── -->
+  <div class="main-layout">
+
+    <!-- ══════════ LEFT: PIPELINE ══════════ -->
+    <div class="pipeline-col">
+
+      <!-- STEP 1: Data Collection -->
+      <div class="p-step step-teal">
+        <div class="step-header">
+          <div class="step-num num-teal">1</div>
+          <div class="step-icon">📡</div>
+          <div class="step-title teal-title">DATA COLLECTION LAYER</div>
+        </div>
+        <div class="step-body">
+          <div class="step-desc">
+            Silently captures raw user behavioral signals from the browser and device in real time — mouse movements, keystrokes, touch gestures, device fingerprints, and GPS/IP context. No analysis happens here; only pure data capture.
+            <div class="tech-tags" style="margin-top:4px">
+              <span class="t-tag tt-teal">JavaScript Browser APIs</span>
+              <span class="t-tag tt-muted">Mobile SDK</span>
+              <span class="t-tag tt-muted">OS-level hooks (secure)</span>
+              <span class="t-tag tt-amber">Event sampling @100ms</span>
+            </div>
+          </div>
+          <div class="step-benefit">✅ Real-time input feed</div>
+        </div>
+      </div>
+
+      <div class="conn">
+        <div class="conn-line"></div>
+        <div class="conn-arrow">▼</div>
+        <div class="conn-label">raw event stream (mouse, keyboard, touch) → 100ms intervals</div>
+      </div>
+
+      <!-- STEP 2: Stream Processing -->
+      <div class="p-step step-blue">
+        <div class="step-header">
+          <div class="step-num num-blue">2</div>
+          <div class="step-icon">⚡</div>
+          <div class="step-title blue-title">STREAM PROCESSING — REAL-TIME ENGINE</div>
+        </div>
+        <div class="step-body">
+          <div class="step-desc">
+            Ingests the raw event stream and processes it as it arrives using distributed messaging and streaming frameworks. <span class="inline-def">Apache Kafka</span> acts as a high-throughput event queue; <span class="inline-def">Apache Spark Streaming</span> performs real-time ETL (extract, transform, load); <span class="inline-def">Redis</span> provides ultra-low-latency feature caching for instant lookups.
+            <div class="tech-tags" style="margin-top:4px">
+              <span class="t-tag tt-blue">Apache Kafka</span>
+              <span class="t-tag tt-blue">Spark Streaming</span>
+              <span class="t-tag tt-muted">Redis Cache</span>
+              <span class="t-tag tt-amber">ETL pipeline</span>
+            </div>
+          </div>
+          <div class="step-benefit">⚡ &lt;200ms latency</div>
+        </div>
+      </div>
+
+      <div class="conn">
+        <div class="conn-line"></div>
+        <div class="conn-arrow">▼</div>
+        <div class="conn-label">structured event data → feature pipeline</div>
+      </div>
+
+      <!-- STEP 3: Feature Engineering -->
+      <div class="p-step step-amber">
+        <div class="step-header">
+          <div class="step-num num-amber">3</div>
+          <div class="step-icon">🔧</div>
+          <div class="step-title amber-title">FEATURE ENGINEERING</div>
+        </div>
+        <div class="step-body">
+          <div class="step-desc">
+            Converts raw event data into meaningful numerical features that ML models can understand. Raw clicks become: typing speed (WPM), mouse velocity vectors, dwell time per key, swipe angle/pressure, scroll rhythm, etc. <span class="inline-def">Feature engineering</span> = translating human behavior into math.
+            <div class="tech-tags" style="margin-top:4px">
+              <span class="t-tag tt-amber">48-dim feature vector</span>
+              <span class="t-tag tt-muted">Typing speed (WPM)</span>
+              <span class="t-tag tt-muted">Mouse trajectory</span>
+              <span class="t-tag tt-muted">Touch pressure</span>
+              <span class="t-tag tt-muted">Scroll rhythm</span>
+            </div>
+          </div>
+          <div class="step-benefit">📐 ML-ready vectors</div>
+        </div>
+      </div>
+
+      <div class="conn">
+        <div class="conn-line"></div>
+        <div class="conn-arrow">▼</div>
+        <div class="conn-label">raw features → normalization</div>
+      </div>
+
+      <!-- STEP 4: Normalization -->
+      <div class="p-step step-purple">
+        <div class="step-header">
+          <div class="step-num num-purple">4</div>
+          <div class="step-icon">⚖️</div>
+          <div class="step-title purple-title">NORMALIZATION LAYER</div>
+        </div>
+        <div class="step-body">
+          <div class="step-desc">
+            Standardizes all feature values using <span class="inline-def">StandardScaler</span> so different devices, screen sizes, and keyboard types don't bias the model. A fast typist on a desktop and a slow typist on mobile both produce comparable normalized values. Without this, models learn hardware differences, not behavior.
+            <div class="tech-tags" style="margin-top:4px">
+              <span class="t-tag tt-purple">StandardScaler</span>
+              <span class="t-tag tt-muted">Z-score normalization</span>
+              <span class="t-tag tt-muted">Per-user baseline</span>
+            </div>
+          </div>
+          <div class="step-benefit">📊 Device-agnostic</div>
+        </div>
+      </div>
+
+      <div class="conn">
+        <div class="conn-line"></div>
+        <div class="conn-arrow">▼</div>
+        <div class="conn-label">normalized feature vector (48-dim) → ML inference</div>
+      </div>
+
+      <!-- STEP 5: ML Models -->
+      <div class="p-step step-purple">
+        <div class="step-header">
+          <div class="step-num num-purple">5</div>
+          <div class="step-icon">🧠</div>
+          <div class="step-title purple-title">ML MODELS LAYER — PARALLEL INFERENCE</div>
+        </div>
+        <div class="ml-split">
+          <div class="ml-mini ml-lstm">
+            <div class="ml-mini-head">
+              <div class="ml-mini-icon">🔄</div>
+              <div class="ml-mini-name" style="color:var(--purple)">LSTM Network</div>
+            </div>
+            <div class="ml-mini-full"><strong>Long Short-Term Memory</strong> — a type of recurrent neural network that has "memory". It reads behavior sequences over time (t-3 → now) and detects gradual drifts invisible in a single snapshot.</div>
+            <div class="ml-mini-benefit" style="color:var(--purple)">→ Detects unusual sequences &amp; behavioral drift</div>
+          </div>
+          <div class="ml-mini ml-rf">
+            <div class="ml-mini-head">
+              <div class="ml-mini-icon">🌲</div>
+              <div class="ml-mini-name" style="color:var(--green)">Random Forest</div>
+            </div>
+            <div class="ml-mini-full"><strong>Ensemble of Decision Trees</strong> — hundreds of trees each "vote" on whether behavior is normal or anomalous. Uses static feature snapshots. Extremely fast and handles imbalanced data well.</div>
+            <div class="ml-mini-benefit" style="color:var(--green)">→ Fast classification of known attack patterns</div>
+          </div>
+          <div class="ml-mini ml-ens">
+            <div class="ml-mini-head">
+              <div class="ml-mini-icon">🏆</div>
+              <div class="ml-mini-name" style="color:var(--amber)">Ensemble Scorer</div>
+            </div>
+            <div class="ml-mini-full"><strong>Weighted Model Combination</strong> — fuses LSTM's temporal score + Random Forest's classification score using learned weights. Final output is a single anomaly score (0→1) representing threat level.</div>
+            <div class="ml-mini-benefit" style="color:var(--amber)">→ Boosts accuracy to ~95%, reduces false positives</div>
+          </div>
+        </div>
+        <div class="tech-tags" style="margin-top:7px; padding-left:28px">
+          <span class="t-tag tt-purple">TensorFlow / PyTorch</span>
+          <span class="t-tag tt-green">scikit-learn</span>
+          <span class="t-tag tt-muted">ONNX cross-platform</span>
+          <span class="t-tag tt-amber">Python 3.x</span>
+        </div>
+      </div>
+
+      <div class="conn">
+        <div class="conn-line"></div>
+        <div class="conn-arrow">▼</div>
+        <div class="conn-label">anomaly score [0.00–1.00] + confidence + context → decision engine</div>
+      </div>
+
+      <!-- STEP 6: Decision Engine -->
+      <div class="p-step step-amber">
+        <div class="step-header">
+          <div class="step-num num-amber">6</div>
+          <div class="step-icon">⚙️</div>
+          <div class="step-title amber-title">DECISION ENGINE</div>
+        </div>
+        <div class="step-body">
+          <div class="step-desc">
+            Takes the ML anomaly score and combines it with rule-based logic (IP reputation, time-of-day, login history) to assign a final <strong style="color:var(--amber)">Risk Level</strong>. ML gives the score — the decision engine interprets it and decides the action. Without this layer, ML only outputs a number and takes no action.
+            <div class="tech-tags" style="margin-top:4px">
+              <span class="t-tag tt-amber">Rules Engine</span>
+              <span class="t-tag tt-muted">Node.js / Flask API</span>
+              <span class="t-tag tt-muted">Context enrichment</span>
+            </div>
+          </div>
+          <div class="step-benefit">🎯 Smart risk decision</div>
+        </div>
+      </div>
+
+      <div class="conn">
+        <div class="conn-line"></div>
+        <div class="conn-arrow">▼</div>
+        <div class="conn-label">risk level (LOW / MEDIUM / HIGH) → enforcement layer</div>
+      </div>
+
+      <!-- STEP 7: Response Layer -->
+      <div class="p-step step-red">
+        <div class="step-header">
+          <div class="step-num num-red">7</div>
+          <div class="step-icon">🛡️</div>
+          <div class="step-title red-title">RESPONSE LAYER — REAL-TIME ENFORCEMENT</div>
+        </div>
+        <div class="response-grid">
+          <div class="resp-card resp-low">
+            <div class="resp-icon">✅</div>
+            <div class="resp-level" style="color:var(--teal)">LOW RISK</div>
+            <div class="resp-action">Allow session — seamless UX, no friction</div>
+            <div class="resp-range">Score: 0.00–0.33</div>
+          </div>
+          <div class="resp-card resp-med">
+            <div class="resp-icon">🔐</div>
+            <div class="resp-level" style="color:var(--amber)">MEDIUM RISK</div>
+            <div class="resp-action">Step-up auth — OTP / CAPTCHA / re-verify</div>
+            <div class="resp-range">Score: 0.34–0.66</div>
+          </div>
+          <div class="resp-card resp-high">
+            <div class="resp-icon">🚫</div>
+            <div class="resp-level" style="color:var(--red)">HIGH RISK</div>
+            <div class="resp-action">Block &amp; terminate — session killed immediately</div>
+            <div class="resp-range">Score: 0.67–1.00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="conn">
+        <div class="conn-line"></div>
+        <div class="conn-arrow">▼</div>
+        <div class="conn-label">events + decisions → persistent storage</div>
+      </div>
+
+      <!-- STEP 8 + 9: Storage + Learning (side by side) -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+
+        <div class="p-step step-green">
+          <div class="step-header">
+            <div class="step-num num-green">8</div>
+            <div class="step-icon">🗄️</div>
+            <div class="step-title green-title">DATA STORAGE &amp; LOGGING</div>
+          </div>
+          <div class="step-body-full">
+            <div class="step-desc">
+              Stores all session logs, user behavioral profiles, risk decisions, and raw features in persistent databases. <span class="inline-def">MongoDB</span> handles flexible document-style session logs; <span class="inline-def">PostgreSQL</span> stores structured user profiles and audit trails. This data powers future model retraining.
+              <div class="tech-tags" style="margin-top:4px">
+                <span class="t-tag tt-green">MongoDB</span>
+                <span class="t-tag tt-green">PostgreSQL</span>
+                <span class="t-tag tt-muted">AES-256 encrypted</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-step step-teal">
+          <div class="step-header">
+            <div class="step-num num-teal">9</div>
+            <div class="step-icon">🔁</div>
+            <div class="step-title teal-title">CONTINUOUS LEARNING</div>
+          </div>
+          <div class="step-body-full">
+            <div class="step-desc">
+              Periodically retrains ML models using newly accumulated session data. Labeled anomaly events (flagged and confirmed) are fed back into the training pipeline. The system learns new attack patterns and adapts to user behavioral changes over time — improving with every cycle.
+              <div class="tech-tags" style="margin-top:4px">
+                <span class="t-tag tt-teal">Online learning</span>
+                <span class="t-tag tt-muted">Scheduled retraining</span>
+                <span class="t-tag tt-muted">Feedback loop</span>
+              </div>
+              <div class="loop-tag">⟳ models improve over time → higher accuracy every cycle</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- end pipeline-col -->
+
+    <!-- ══════════ RIGHT: SIDE PANEL ══════════ -->
+    <div class="side-col">
+
+      <!-- RISK METER -->
+      <div class="risk-meter">
+        <div class="risk-title">🎯 Risk Meter</div>
+        <div class="risk-bar-wrap">
+          <div class="risk-bar"></div>
+          <div class="risk-bar-labels">
+            <span>0.0</span>
+            <span>0.33</span>
+            <span>0.66</span>
+            <span>1.0</span>
+          </div>
+        </div>
+        <div class="risk-zones">
+          <div class="risk-zone rz-low">
+            <div class="rz-label">🟢 LOW</div>
+            <div class="rz-action">Allow</div>
+          </div>
+          <div class="risk-zone rz-med">
+            <div class="rz-label">🟡 MED</div>
+            <div class="rz-action">OTP</div>
+          </div>
+          <div class="risk-zone rz-high">
+            <div class="rz-label">🔴 HIGH</div>
+            <div class="rz-action">Block</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TECHNOLOGY STACK -->
+      <div class="side-section ss-purple">
+        <div class="side-title st-purple">⚙️ Technology Stack</div>
+
+        <div class="stack-row">
+          <div class="stack-cat">Frontend</div>
+          <div class="stack-tags">
+            <span class="s-tag" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">JavaScript</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.03)">HTML5 Events</span>
+          </div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-cat">Backend</div>
+          <div class="stack-tags">
+            <span class="s-tag" style="color:var(--green);border-color:rgba(62,207,142,0.3);background:rgba(62,207,142,0.07)">Node.js</span>
+            <span class="s-tag" style="color:var(--blue);border-color:rgba(77,166,255,0.3);background:rgba(77,166,255,0.07)">Flask</span>
+          </div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-cat">ML</div>
+          <div class="stack-tags">
+            <span class="s-tag" style="color:var(--purple);border-color:rgba(155,109,255,0.3);background:rgba(155,109,255,0.07)">Python</span>
+            <span class="s-tag" style="color:var(--teal);border-color:rgba(0,212,164,0.3);background:rgba(0,212,164,0.07)">TensorFlow</span>
+            <span class="s-tag" style="color:var(--green);border-color:rgba(62,207,142,0.3);background:rgba(62,207,142,0.07)">scikit-learn</span>
+          </div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-cat">Streaming</div>
+          <div class="stack-tags">
+            <span class="s-tag" style="color:var(--blue);border-color:rgba(77,166,255,0.3);background:rgba(77,166,255,0.07)">Kafka</span>
+            <span class="s-tag" style="color:var(--blue);border-color:rgba(77,166,255,0.3);background:rgba(77,166,255,0.07)">Spark</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.03)">Redis</span>
+          </div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-cat">Database</div>
+          <div class="stack-tags">
+            <span class="s-tag" style="color:var(--green);border-color:rgba(62,207,142,0.3);background:rgba(62,207,142,0.07)">MongoDB</span>
+            <span class="s-tag" style="color:var(--blue);border-color:rgba(77,166,255,0.3);background:rgba(77,166,255,0.07)">PostgreSQL</span>
+          </div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-cat">Security</div>
+          <div class="stack-tags">
+            <span class="s-tag" style="color:var(--red);border-color:rgba(255,90,90,0.3);background:rgba(255,90,90,0.07)">TLS 1.3</span>
+            <span class="s-tag" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">Zero Trust</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.03)">AES-256</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KEY TERMS GLOSSARY -->
+      <div class="glossary">
+        <div class="glossary-title">📚 Key Terms Explained</div>
+
+        <div class="glos-item">
+          <div class="glos-term">🔄 LSTM</div>
+          <div class="glos-def">Long Short-Term Memory — an AI model that "remembers" past behavior and detects patterns evolving over time.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-term">🌲 Random Forest</div>
+          <div class="glos-def">Hundreds of decision trees each vote on a classification; majority wins. Fast and accurate for known threat patterns.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-term">⚡ Apache Kafka</div>
+          <div class="glos-def">A message queue system that handles millions of events per second reliably — the "highway" for data flow.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-term">🔧 Feature Engineering</div>
+          <div class="glos-def">Transforming raw data (e.g. click timestamps) into numbers that represent meaning (e.g. typing speed in WPM).</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-term">⚖️ Normalization</div>
+          <div class="glos-def">Rescaling values to a standard range so a fast typist and slow typist are fairly compared by the model.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-term">🏆 Ensemble Model</div>
+          <div class="glos-def">Combines outputs of multiple models with weighted voting — more reliable than any single model alone.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-term">🔁 Continuous Learning</div>
+          <div class="glos-def">The system retrains itself on new data periodically, adapting to new attack patterns and user changes.</div>
+        </div>
+        <div class="glos-item">
+          <div class="glos-term">🔒 Zero Trust Architecture</div>
+          <div class="glos-def">Security principle: "Never trust, always verify." Every request is authenticated regardless of source.</div>
+        </div>
+      </div>
+
+      <!-- SECURITY LAYER -->
+      <div class="side-section ss-amber">
+        <div class="side-title st-amber">🔐 Security Standards</div>
+        <div class="stack-row">
+          <div class="stack-tags">
+            <span class="s-tag" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">AES-256 Encryption</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.03)">GDPR Compliant</span>
+            <span class="s-tag" style="color:var(--red);border-color:rgba(255,90,90,0.3);background:rgba(255,90,90,0.07)">HSM Keys</span>
+            <span class="s-tag" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">Zero Trust</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.03)">Data Anonymization</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end side-col -->
+
+  </div><!-- end main-layout -->
+
+  <!-- ─── FOOTER ─── -->
+  <div class="footer">
+    <div class="footer-tag">CONTINUOUS AUTHENTICATION SYSTEM · v2.0</div>
+    <div class="footer-note"><em>"The pipeline runs silently — zero friction for legitimate users, zero mercy for threats."</em></div>
+    <div class="footer-slide">04 / 06</div>
+  </div>
+
+</div>
+</body>
+</html>

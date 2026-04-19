@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cover – State Aware Authentication System</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0D0F14;--text:#F0EEE8;--muted:#8A8A9A;
+  --teal:#00D4A4;--purple:#9B6DFF;--blue:#4DA6FF;
+  --amber:#FFB547;--green:#3ECF8E;--red:#FF5A5A;
+  --lpu-orange:#E8751A;--lpu-dark:#1A1A2E;
+  --border:rgba(255,255,255,0.08);
+}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;overflow:hidden;}
+
+/* ── SLIDE SHELL ── */
+.slide{
+  width:1200px;height:800px;margin:0 auto;position:relative;overflow:hidden;
+  background:var(--bg);
+}
+
+/* grid */
+.slide::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:48px 48px;pointer-events:none;z-index:0;
+}
+
+/* blobs */
+.blob{position:absolute;border-radius:50%;filter:blur(110px);opacity:.1;pointer-events:none;z-index:0;}
+.b1{width:500px;height:400px;background:var(--purple);top:-150px;left:-150px;}
+.b2{width:400px;height:350px;background:var(--teal);  bottom:-120px;right:-100px;}
+.b3{width:300px;height:260px;background:var(--blue);  top:200px;left:42%;}
+.b4{width:250px;height:200px;background:var(--lpu-orange);bottom:100px;left:12%;}
+
+/* ── CANVAS PARTICLES ── */
+#particles{position:absolute;inset:0;z-index:0;pointer-events:none;}
+
+/* ── LEFT PANEL ── */
+.left-panel{
+  position:absolute;left:0;top:0;bottom:0;width:460px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 40px;z-index:2;
+}
+.left-panel::after{
+  content:'';position:absolute;right:0;top:10%;bottom:10%;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(155,109,255,.5),rgba(0,212,164,.5),transparent);
+}
+
+/* LPU Logo */
+.lpu-logo-wrap{position:relative;margin-bottom:24px;animation:float-logo 4s ease-in-out infinite;}
+@keyframes float-logo{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.lpu-logo{width:120px;height:120px;}
+.logo-glow{
+  position:absolute;inset:-12px;border-radius:50%;
+  background:radial-gradient(circle,rgba(232,117,26,.25),transparent 70%);
+  animation:glow-pulse 2.5s ease-in-out infinite;
+}
+@keyframes glow-pulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+
+.lpu-name{
+  font-size:15px;font-weight:700;text-align:center;letter-spacing:.02em;
+  color:var(--text);margin-bottom:6px;
+}
+.lpu-sub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;text-align:center;}
+
+.dept-badge{
+  margin-top:16px;padding:6px 16px;border-radius:20px;
+  border:1px solid rgba(232,117,26,.3);background:rgba(232,117,26,.08);
+  font-size:10px;font-weight:600;color:var(--lpu-orange);letter-spacing:.06em;
+  text-transform:uppercase;font-family:'JetBrains Mono',monospace;
+}
+
+/* floating icons */
+.float-icons{position:absolute;inset:0;pointer-events:none;}
+.fi{position:absolute;font-size:20px;opacity:.2;animation:float-icon 6s ease-in-out infinite;}
+.fi:nth-child(1){top:12%;left:8%;animation-delay:0s;}
+.fi:nth-child(2){top:25%;left:78%;animation-delay:.8s;}
+.fi:nth-child(3){top:60%;left:6%;animation-delay:1.6s;}
+.fi:nth-child(4){top:72%;left:72%;animation-delay:2.4s;}
+.fi:nth-child(5){top:40%;left:45%;animation-delay:3.2s;}
+@keyframes float-icon{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(8deg)}}
+
+/* ── RIGHT PANEL ── */
+.right-panel{
+  position:absolute;left:460px;right:0;top:0;bottom:0;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:48px 52px;z-index:2;
+}
+
+/* top tag */
+.proj-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:9.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--teal);background:rgba(0,212,164,.1);
+  border:1px solid rgba(0,212,164,.25);border-radius:20px;padding:4px 12px;
+  margin-bottom:16px;width:fit-content;
+}
+.proj-tag .dot{width:6px;height:6px;background:var(--teal);border-radius:50%;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* main title */
+.main-title{
+  font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1.15;
+  margin-bottom:6px;
+}
+.mt-line1{color:var(--text);}
+.mt-line2{
+  background:linear-gradient(90deg,var(--teal),var(--purple),var(--blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:title-shimmer 4s linear infinite;
+  background-size:200% 100%;
+}
+@keyframes title-shimmer{0%{background-position:0% center}100%{background-position:200% center}}
+
+.main-sub{
+  font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;
+  margin-bottom:28px;line-height:1.5;
+}
+.main-sub span{color:var(--teal);}
+
+/* project type badges */
+.proj-badges{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap;}
+.pb{
+  font-size:8.5px;font-weight:600;padding:4px 10px;border-radius:8px;border:1px solid;
+  font-family:'JetBrains Mono',monospace;
+}
+.pb-teal  {color:var(--teal);  border-color:rgba(0,212,164,.3); background:rgba(0,212,164,.07);}
+.pb-purple{color:var(--purple);border-color:rgba(155,109,255,.3);background:rgba(155,109,255,.07);}
+.pb-blue  {color:var(--blue);  border-color:rgba(77,166,255,.3); background:rgba(77,166,255,.07);}
+.pb-amber {color:var(--amber); border-color:rgba(255,181,71,.3); background:rgba(255,181,71,.07);}
+
+/* team table */
+.team-section{
+  border-radius:12px;border:1px solid rgba(155,109,255,.25);
+  background:rgba(255,255,255,.025);overflow:hidden;
+  animation:table-glow 3s ease-in-out infinite;
+}
+@keyframes table-glow{
+  0%,100%{border-color:rgba(155,109,255,.25);box-shadow:0 0 0 rgba(155,109,255,0);}
+  50%{border-color:rgba(155,109,255,.5);box-shadow:0 0 20px rgba(155,109,255,.1);}
+}
+.team-header{
+  background:linear-gradient(135deg,rgba(155,109,255,.2),rgba(77,166,255,.15));
+  padding:10px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(155,109,255,.2);
+}
+.th-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--purple);font-family:'JetBrains Mono',monospace;}
+.th-count{font-size:8px;color:var(--muted);}
+
+.team-cols{
+  display:grid;grid-template-columns:40px 1fr 120px;
+  padding:8px 16px;gap:0;
+  font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--amber);font-family:'JetBrains Mono',monospace;
+  border-bottom:1px solid var(--border);
+}
+.team-row{
+  display:grid;grid-template-columns:40px 1fr 120px;
+  padding:10px 16px;gap:0;align-items:center;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  transition:background .2s;position:relative;overflow:hidden;
+}
+.team-row:last-child{border-bottom:none;}
+.team-row::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--teal);opacity:0;transition:opacity .2s;
+}
+.team-row:hover::before{opacity:1;}
+.team-row:hover{background:rgba(255,255,255,.03);}
+
+.tr-num{font-size:11px;font-weight:700;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.tr-name{font-size:12px;font-weight:600;color:var(--text);}
+.tr-reg{font-size:10.5px;color:var(--teal);font-family:'JetBrains Mono',monospace;font-weight:500;}
+
+/* highlighted row (your name Raj!) */
+.team-row.highlight{background:rgba(0,212,164,.04);}
+.team-row.highlight .tr-name{color:var(--teal);}
+.team-row.highlight::before{opacity:1!important;}
+
+/* bottom bar */
+.bottom-bar{
+  position:absolute;bottom:0;left:0;right:0;height:3px;z-index:3;
+  background:linear-gradient(90deg,var(--lpu-orange),var(--purple),var(--teal),var(--blue),var(--green));
+  background-size:200% 100%;animation:bar-scroll 4s linear infinite;
+}
+@keyframes bar-scroll{0%{background-position:0% center}100%{background-position:200% center}}
+
+/* slide counter */
+.slide-counter{
+  position:absolute;top:20px;right:28px;z-index:3;
+  font-size:10px;font-weight:700;color:var(--muted);font-family:'JetBrains Mono',monospace;
+  display:flex;align-items:center;gap:6px;
+}
+.sc-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:blink 1.5s infinite;}
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <!-- particles canvas -->
+  <canvas id="particles"></canvas>
+
+  <!-- blobs -->
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="blob b4"></div>
+
+  <!-- floating bg icons -->
+  <div class="float-icons">
+    <div class="fi">🛡️</div><div class="fi">🔐</div>
+    <div class="fi">🧠</div><div class="fi">⚡</div><div class="fi">🔑</div>
+  </div>
+
+  <!-- slide counter -->
+  <div class="slide-counter"><span class="sc-dot"></span> 00 / 09</div>
+
+  <!-- ── LEFT PANEL ── -->
+  <div class="left-panel">
+    <div class="lpu-logo-wrap">
+      <div class="logo-glow"></div>
+      <!-- LPU Logo SVG recreation -->
+      <svg class="lpu-logo" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="58" fill="#1a1a1a" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+        <!-- outer ring text bg -->
+        <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
+        <!-- sunburst rays -->
+        <g transform="translate(60,60)">
+          <ellipse rx="6" ry="34" fill="#E8751A" transform="rotate(-35)"/>
+          <ellipse rx="6" ry="34" fill="#E8751A" transform="rotate(-20)"/>
+          <ellipse rx="6" ry="34" fill="#E8751A" transform="rotate(-5)"/>
+          <ellipse rx="5" ry="34" fill="#222" transform="rotate(8)"/>
+          <ellipse rx="5" ry="34" fill="#222" transform="rotate(20)"/>
+          <ellipse rx="4" ry="34" fill="#E8751A" transform="rotate(-50)"/>
+        </g>
+        <!-- center circle -->
+        <circle cx="60" cy="60" r="20" fill="#1a1a1a"/>
+        <circle cx="60" cy="60" r="18" fill="none" stroke="#E8751A" stroke-width="1.5"/>
+        <!-- ring labels -->
+        <text x="60" y="18" text-anchor="middle" font-size="5.5" fill="rgba(255,255,255,0.7)" font-family="Arial" letter-spacing="2">LOVELY PROFESSIONAL</text>
+        <text x="60" y="108" text-anchor="middle" font-size="5.5" fill="rgba(255,255,255,0.7)" font-family="Arial" letter-spacing="3">UNIVERSITY</text>
+        <!-- dots -->
+        <circle cx="22" cy="62" r="2" fill="rgba(255,255,255,0.5)"/>
+        <circle cx="98" cy="62" r="2" fill="rgba(255,255,255,0.5)"/>
+      </svg>
+    </div>
+
+    <div class="lpu-name">Lovely Professional University</div>
+    <div class="lpu-sub">Phagwara, Punjab · Established 2005</div>
+    <div class="dept-badge">B.Tech · Computer Science &amp; Engineering</div>
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <div class="right-panel">
+
+    <div class="proj-tag"><span class="dot"></span> Patent Presentation · 2025–26</div>
+
+    <div class="main-title">
+      <div class="mt-line1">State Aware</div>
+      <div class="mt-line2">Authentication System</div>
+    </div>
+    <div class="main-sub">
+      AI-Powered · Behavioral Biometrics · Continuous Session Security<br/>
+      <span>// securing the post-login world with machine learning</span>
+    </div>
+
+    <div class="proj-badges">
+      <span class="pb pb-teal">🧠 AI / ML Based</span>
+      <span class="pb pb-purple">🔐 Cybersecurity</span>
+      <span class="pb pb-blue">⚡ Real-Time</span>
+      <span class="pb pb-amber">🏗️ System Design</span>
+    </div>
+
+    <div class="team-section">
+      <div class="team-header">
+        <div class="th-title">👥 Team Members</div>
+        <div class="th-count">4 contributors</div>
+      </div>
+      <div class="team-cols">
+        <div>S.No</div><div>Name</div><div>Reg. No.</div>
+      </div>
+      <div class="team-row">
+        <div class="tr-num">01</div>
+        <div class="tr-name">Sachin Singh</div>
+        <div class="tr-reg">12323683</div>
+      </div>
+      <div class="team-row">
+        <div class="tr-num">02</div>
+        <div class="tr-name">Ashish Singh</div>
+        <div class="tr-reg">12307037</div>
+      </div>
+      <div class="team-row">
+        <div class="tr-num">03</div>
+        <div class="tr-name">Raj Hansh</div>
+        <div class="tr-reg">12316903</div>
+      </div>
+      <div class="team-row">
+        <div class="tr-num">04</div>
+        <div class="tr-name">Akash Singh</div>
+        <div class="tr-reg">12310773</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-bar"></div>
+</div>
+
+<script>
+// particle system
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+canvas.width = 1200; canvas.height = 800;
+
+const particles = Array.from({length:55}, () => ({
+  x: Math.random()*1200, y: Math.random()*800,
+  vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.35,
+  r: Math.random()*1.8+.5,
+  color:['rgba(0,212,164,','rgba(155,109,255,','rgba(77,166,255,'][Math.floor(Math.random()*3)]
+}));
+
+function drawParticles(){
+  ctx.clearRect(0,0,1200,800);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>1200) p.vx*=-1;
+    if(p.y<0||p.y>800) p.vy*=-1;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.color+'0.6)';
+    ctx.fill();
+  });
+  // draw connections
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x;
+      const dy=particles[i].y-particles[j].y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<100){
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=`rgba(155,109,255,${(1-dist/100)*0.12})`;
+        ctx.lineWidth=0.8;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+</script>
+</body>
+</html>

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Slide 2 – System Initialization</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #0D0F14;
+  --card:   #141720;
+  --border: rgba(255,255,255,0.08);
+  --text:   #F0EEE8;
+  --muted:  #8A8A9A;
+  --teal:   #00D4A4;
+  --purple: #9B6DFF;
+  --amber:  #FFB547;
+  --red:    #FF5A5A;
+  --green:  #3ECF8E;
+  --blue:   #4DA6FF;
+  --pink:   #FF6EB4;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.slide {
+  width: 1200px;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  padding: 28px 44px 32px;
+}
+
+/* grid bg */
+.slide::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+/* blobs */
+.blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.1; pointer-events: none; z-index: 0; }
+.blob-1 { width: 380px; height: 300px; background: var(--teal);   top: -50px; left: -60px; }
+.blob-2 { width: 320px; height: 280px; background: var(--purple); bottom: 60px; right: -60px; }
+.blob-3 { width: 260px; height: 220px; background: var(--amber);  top: 200px; left: 40%; }
+
+/* ─── HEADER ─── */
+.header {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.slide-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--purple); background: rgba(155,109,255,0.1);
+  border: 1px solid rgba(155,109,255,0.25); border-radius: 20px; padding: 4px 12px; margin-bottom: 8px;
+}
+.slide-tag .dot { width: 6px; height: 6px; background: var(--purple); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+h1 span { color: var(--purple); }
+.subtitle { font-size: 12px; color: var(--muted); margin-top: 5px; font-family: 'JetBrains Mono', monospace; }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; padding-top: 4px; }
+.power-line {
+  font-size: 10px; font-style: italic; color: var(--amber);
+  background: rgba(255,181,71,0.07); border: 1px solid rgba(255,181,71,0.2);
+  border-radius: 8px; padding: 6px 12px; max-width: 320px; text-align: right; line-height: 1.5;
+}
+
+/* ─── PHASES ROW ─── */
+.phases-row {
+  position: relative; z-index: 1;
+  display: flex; gap: 8px; margin-bottom: 10px;
+}
+
+.phase-card {
+  flex: 1; border-radius: 12px; padding: 12px 10px;
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+.phase-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 12px 12px 0 0;
+}
+.ph1::before { background: linear-gradient(90deg, var(--red), transparent); }
+.ph2::before { background: linear-gradient(90deg, var(--teal), transparent); }
+.ph3::before { background: linear-gradient(90deg, var(--purple), transparent); }
+.ph4::before { background: linear-gradient(90deg, var(--blue), transparent); }
+.ph5::before { background: linear-gradient(90deg, var(--pink), transparent); }
+
+.ph1 { border-color: rgba(255,90,90,0.25);   background: rgba(255,90,90,0.05); }
+.ph2 { border-color: rgba(0,212,164,0.25);   background: rgba(0,212,164,0.05); }
+.ph3 { border-color: rgba(155,109,255,0.25); background: rgba(155,109,255,0.05); }
+.ph4 { border-color: rgba(77,166,255,0.25);  background: rgba(77,166,255,0.05); }
+.ph5 { border-color: rgba(255,110,180,0.25); background: rgba(255,110,180,0.05); }
+
+.phase-tag {
+  font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  border-radius: 4px; padding: 2px 7px; margin-bottom: 6px; display: inline-block;
+}
+.ph1 .phase-tag { color: var(--red);    background: rgba(255,90,90,0.15); }
+.ph2 .phase-tag { color: var(--teal);   background: rgba(0,212,164,0.12); }
+.ph3 .phase-tag { color: var(--purple); background: rgba(155,109,255,0.15); }
+.ph4 .phase-tag { color: var(--blue);   background: rgba(77,166,255,0.12); }
+.ph5 .phase-tag { color: var(--pink);   background: rgba(255,110,180,0.12); }
+
+.phase-icon { font-size: 22px; margin-bottom: 5px; display: block; }
+.phase-title { font-size: 12px; font-weight: 700; line-height: 1.3; margin-bottom: 6px; }
+.ph1 .phase-title { color: var(--red); }
+.ph2 .phase-title { color: var(--teal); }
+.ph3 .phase-title { color: var(--purple); }
+.ph4 .phase-title { color: var(--blue); }
+.ph5 .phase-title { color: var(--pink); }
+
+.phase-desc { font-size: 10px; color: var(--muted); line-height: 1.5; margin-bottom: 8px; }
+
+.phase-detail {
+  font-size: 9px; color: var(--muted);
+  background: rgba(255,255,255,0.04); border-radius: 6px; padding: 6px 7px;
+  border-left: 2px solid; line-height: 1.5;
+}
+.ph1 .phase-detail { border-color: var(--red); }
+.ph2 .phase-detail { border-color: var(--teal); }
+.ph3 .phase-detail { border-color: var(--purple); }
+.ph4 .phase-detail { border-color: var(--blue); }
+.ph5 .phase-detail { border-color: var(--pink); }
+
+.phase-connector {
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto; width: 20px;
+  padding-top: 50px;
+}
+.connector-arrow {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.conn-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+.conn-arrow-head {
+  width: 0; height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 6px solid rgba(255,255,255,0.2);
+}
+
+/* ─── MIDDLE SECTION (3 panels) ─── */
+.middle-row {
+  position: relative; z-index: 1;
+  display: flex; gap: 10px; margin-bottom: 10px;
+}
+
+.mid-panel {
+  border-radius: 10px; padding: 11px 13px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.025);
+}
+
+/* Feature Engineering */
+.feat-panel { flex: 0 0 auto; width: 222px; border-color: rgba(0,212,164,0.2); background: rgba(0,212,164,0.04); }
+.feat-panel .pan-title { font-size: 11px; font-weight: 700; color: var(--teal); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.feat-item {
+  display: flex; align-items: flex-start; gap: 6px;
+  font-size: 9.5px; color: var(--muted); margin-bottom: 5px; line-height: 1.4;
+}
+.feat-item .fi-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); flex-shrink: 0; margin-top: 4px; opacity: 0.7; }
+.feat-item strong { color: var(--text); }
+
+/* ML Model details */
+.ml-panel { flex: 0 0 auto; width: 230px; border-color: rgba(155,109,255,0.2); background: rgba(155,109,255,0.04); }
+.ml-panel .pan-title { font-size: 11px; font-weight: 700; color: var(--purple); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+
+/* Adaptive + Privacy combined */
+.ap-col { flex: 0 0 auto; width: 200px; display: flex; flex-direction: column; gap: 8px; }
+.adapt-panel { border-color: rgba(255,181,71,0.2); background: rgba(255,181,71,0.04); }
+.adapt-panel .pan-title { font-size: 11px; font-weight: 700; color: var(--amber); margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.priv-panel  { border-color: rgba(77,166,255,0.2); background: rgba(77,166,255,0.04); }
+.priv-panel .pan-title { font-size: 11px; font-weight: 700; color: var(--blue); margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+
+/* Mini graph panel */
+.graph-panel {
+  flex: 1; border-color: rgba(255,110,180,0.18); background: rgba(255,110,180,0.03);
+  display: flex; flex-direction: column;
+}
+.graph-panel .pan-title { font-size: 11px; font-weight: 700; color: var(--pink); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+
+/* SVG graph */
+.graph-svg-wrap { flex: 1; min-height: 120px; position: relative; }
+
+/* Why critical box */
+.why-panel {
+  flex: 0 0 auto; width: 200px;
+  border-color: rgba(255,181,71,0.25); background: rgba(255,181,71,0.06);
+  display: flex; flex-direction: column; justify-content: center;
+}
+.why-panel .pan-title { font-size: 11px; font-weight: 700; color: var(--amber); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.why-stat {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+}
+.why-stat .ws-icon { font-size: 14px; }
+.why-stat .ws-text { font-size: 9.5px; color: var(--muted); line-height: 1.3; }
+.why-stat .ws-text strong { color: var(--amber); }
+.why-note {
+  font-size: 9px; font-style: italic;
+  background: rgba(255,181,71,0.1); border-radius: 6px; padding: 6px 8px;
+  color: var(--amber); line-height: 1.5; margin-top: 4px; text-align: center;
+  border: 1px solid rgba(255,181,71,0.2);
+}
+
+/* ─── DATA FLOW STRIP ─── */
+.flow-strip {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px; padding: 10px 16px; margin-bottom: 10px;
+}
+.flow-strip-title {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px; font-family: 'JetBrains Mono', monospace;
+}
+.flow-nodes { display: flex; align-items: center; gap: 0; }
+.flow-node {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 7px 6px; text-align: center;
+}
+.fn-icon { font-size: 14px; display: block; margin-bottom: 3px; }
+.fn-title { font-size: 9.5px; font-weight: 600; color: var(--text); }
+.fn-sub { font-size: 8px; color: var(--muted); margin-top: 1px; }
+
+.flow-arr {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
+  padding: 0 4px; gap: 2px;
+}
+.fa-line { width: 16px; height: 1.5px; background: rgba(255,255,255,0.15); }
+.fa-head {
+  width: 0; height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid rgba(255,255,255,0.2);
+}
+
+/* ─── DATA COLLECTED BOTTOM ─── */
+.data-bottom {
+  position: relative; z-index: 1;
+  background: rgba(0,212,164,0.04); border: 1px solid rgba(0,212,164,0.15);
+  border-radius: 10px; padding: 10px 16px; margin-bottom: 10px;
+}
+.db-title { font-size: 10px; font-weight: 700; color: var(--teal); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.db-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px 20px; }
+.db-item { display: flex; align-items: flex-start; gap: 5px; font-size: 10px; color: var(--muted); line-height: 1.4; }
+.db-item .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--teal); flex-shrink: 0; margin-top: 5px; opacity: 0.7; }
+
+/* ─── FOOTER ─── */
+.footer {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 12px; border-top: 1px solid var(--border);
+}
+.footer-tag { font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--muted); letter-spacing: 0.06em; }
+.footer-note { font-size: 10px; font-style: italic; color: var(--amber); text-align: center; }
+.footer-slide { font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--muted); }
+
+/* panel list items shared */
+.p-item { display: flex; align-items: flex-start; gap: 6px; font-size: 9.5px; color: var(--muted); margin-bottom: 5px; line-height: 1.4; }
+.p-item .pi-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; opacity: 0.7; }
+.p-item strong { color: var(--text); }
+.purple-dot { background: var(--purple); }
+.amber-dot  { background: var(--amber); }
+.blue-dot   { background: var(--blue); }
+
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="slide-tag"><span class="dot"></span>SLIDE 02 · SYSTEM INITIALIZATION</div>
+      <h1>System Initialization:<br><span>How the Behavioral Baseline is Built</span></h1>
+      <div class="subtitle">// brain-building phase · 5-step pipeline · no enforcement during learning</div>
+    </div>
+    <div class="header-right">
+      <div class="power-line">
+        "This is the brain-building stage — if the baseline is strong, the entire security system becomes intelligent and reliable."
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASES ROW -->
+  <div class="phases-row">
+
+    <div class="phase-card ph1">
+      <div class="phase-tag">Phase 1</div>
+      <span class="phase-icon">👤</span>
+      <div class="phase-title">New User<br>Registration</div>
+      <div class="phase-desc">A new account is created. The system has no knowledge of how this user behaves yet — the slate is completely empty.</div>
+      <div class="phase-detail">Account created · No baseline · No behavior history · Monitoring not yet active</div>
+    </div>
+
+    <div class="phase-connector">
+      <div class="connector-arrow">
+        <div class="conn-dot"></div><div class="conn-dot"></div>
+        <div class="conn-arrow-head"></div>
+      </div>
+    </div>
+
+    <div class="phase-card ph2">
+      <div class="phase-tag">Phase 2</div>
+      <span class="phase-icon">👁</span>
+      <div class="phase-title">Passive Data<br>Collection</div>
+      <div class="phase-desc">The system quietly watches and records how the user naturally interacts — typing, clicking, scrolling — over 7 to 14 days. No alerts are raised.</div>
+      <div class="phase-detail">Silently observes behavior · 7–14 day window · User unaware · Zero disruption to experience</div>
+    </div>
+
+    <div class="phase-connector">
+      <div class="connector-arrow">
+        <div class="conn-dot"></div><div class="conn-dot"></div>
+        <div class="conn-arrow-head"></div>
+      </div>
+    </div>
+
+    <div class="phase-card ph3">
+      <div class="phase-tag">Phase 3</div>
+      <span class="phase-icon">🧠</span>
+      <div class="phase-title">Profile<br>Construction</div>
+      <div class="phase-desc">The ML model is trained on all collected data. It learns what "normal" looks like for this specific user. A behavioral baseline is set.</div>
+      <div class="phase-detail">LSTM + RF trained · Behavioral clustering · Statistical mean &amp; deviation calculated · Baseline locked</div>
+    </div>
+
+    <div class="phase-connector">
+      <div class="connector-arrow">
+        <div class="conn-dot"></div><div class="conn-dot"></div>
+        <div class="conn-arrow-head"></div>
+      </div>
+    </div>
+
+    <div class="phase-card ph4">
+      <div class="phase-tag">Phase 4</div>
+      <span class="phase-icon">⚙️</span>
+      <div class="phase-title">Threshold<br>Calibration</div>
+      <div class="phase-desc">The system fine-tunes its sensitivity. It decides how much change counts as "suspicious" — tuned to keep false alarms low without missing real threats.</div>
+      <div class="phase-detail">Sensitivity tuned · False positive rate minimized · Risk thresholds set · Ready for enforcement</div>
+    </div>
+
+    <div class="phase-connector">
+      <div class="connector-arrow">
+        <div class="conn-dot"></div><div class="conn-dot"></div>
+        <div class="conn-arrow-head"></div>
+      </div>
+    </div>
+
+    <div class="phase-card ph5">
+      <div class="phase-tag">Phase 5</div>
+      <span class="phase-icon">🛡</span>
+      <div class="phase-title">Active<br>Monitoring</div>
+      <div class="phase-desc">The system is now fully live. Every session is silently checked against the baseline in real time. Any mismatch triggers the Decision Engine.</div>
+      <div class="phase-detail">Live enforcement on · Real-time comparison · Session scoring active · Adaptive updates continue</div>
+    </div>
+
+  </div>
+
+  <!-- MIDDLE ROW -->
+  <div class="middle-row">
+
+    <!-- Feature Engineering -->
+    <div class="mid-panel feat-panel">
+      <div class="pan-title">⚡ Feature Engineering</div>
+      <div class="feat-item"><span class="fi-dot"></span><span><strong>Keystroke latency</strong> — exact time between each key press (in ms)</span></div>
+      <div class="feat-item"><span class="fi-dot"></span><span><strong>Mouse acceleration curve</strong> — how smoothly the user moves the cursor</span></div>
+      <div class="feat-item"><span class="fi-dot"></span><span><strong>Session entropy score</strong> — how random or predictable the user's actions are</span></div>
+      <div class="feat-item"><span class="fi-dot"></span><span><strong>Navigation sequence vectors</strong> — the order in which pages are visited</span></div>
+      <div class="feat-item"><span class="fi-dot"></span><span><strong>Time-of-day probability</strong> — when the user typically logs in</span></div>
+    </div>
+
+    <!-- Baseline Model Details -->
+    <div class="mid-panel ml-panel">
+      <div class="pan-title">🤖 Baseline Model Details</div>
+      <div class="p-item"><span class="pi-dot purple-dot"></span><span><strong>LSTM sequence embeddings</strong> — the model stores behavioral patterns as a time-based memory map</span></div>
+      <div class="p-item"><span class="pi-dot purple-dot"></span><span><strong>Behavioral clustering (K-Means)</strong> — groups similar behaviors into "normal zones"</span></div>
+      <div class="p-item"><span class="pi-dot purple-dot"></span><span><strong>Statistical profile</strong> — mean &amp; standard deviation for every tracked metric</span></div>
+      <div class="p-item" style="margin-top:4px"><span class="pi-dot purple-dot"></span><span style="font-style:italic;color:var(--purple)">"Baseline is not just stored data — it is a trained behavioral model."</span></div>
+    </div>
+
+    <!-- Adaptive + Privacy stacked -->
+    <div class="ap-col">
+      <div class="mid-panel adapt-panel" style="flex:1; padding:10px 12px;">
+        <div class="pan-title">🔄 Adaptive Learning</div>
+        <div class="p-item"><span class="pi-dot amber-dot"></span><span><strong>Updates baseline</strong> over time as user habits change</span></div>
+        <div class="p-item"><span class="pi-dot amber-dot"></span><span><strong>Handles behavior drift</strong> — new habits don't trigger false alerts</span></div>
+        <div class="p-item"><span class="pi-dot amber-dot"></span><span><strong>Seasonal patterns</strong> — adjusts for login time changes</span></div>
+      </div>
+      <div class="mid-panel priv-panel" style="flex:1; padding:10px 12px;">
+        <div class="pan-title">🔒 Privacy Layer</div>
+        <div class="p-item"><span class="pi-dot blue-dot"></span><span><strong>On-device processing</strong> — data stays on user's device</span></div>
+        <div class="p-item"><span class="pi-dot blue-dot"></span><span><strong>Differential Privacy</strong> — mathematical noise added to protect identity</span></div>
+        <div class="p-item"><span class="pi-dot blue-dot"></span><span><strong>No raw data stored</strong> — only behavioral patterns are kept</span></div>
+      </div>
+    </div>
+
+    <!-- Mini graph -->
+    <div class="mid-panel graph-panel">
+      <div class="pan-title">📈 Behavioral Consistency Graph</div>
+      <div class="graph-svg-wrap">
+        <svg width="100%" height="130" viewBox="0 0 320 130" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="normalGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00D4A4" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#00D4A4" stop-opacity="0.02"/>
+            </linearGradient>
+            <linearGradient id="anomalyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FF5A5A" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#FF5A5A" stop-opacity="0.02"/>
+            </linearGradient>
+          </defs>
+          <!-- axes -->
+          <line x1="32" y1="10" x2="32" y2="108" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <line x1="32" y1="108" x2="310" y2="108" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <!-- y label -->
+          <text x="5" y="60" fill="rgba(255,255,255,0.3)" font-size="8" font-family="JetBrains Mono" transform="rotate(-90,5,60)" text-anchor="middle">Consistency</text>
+          <text x="170" y="122" fill="rgba(255,255,255,0.3)" font-size="8" font-family="JetBrains Mono" text-anchor="middle">Time →</text>
+          <!-- normal zone band -->
+          <rect x="32" y="50" width="278" height="30" fill="rgba(0,212,164,0.06)" rx="2"/>
+          <text x="36" y="48" fill="rgba(0,212,164,0.5)" font-size="7.5" font-family="JetBrains Mono">normal zone</text>
+          <!-- normal stable line path + fill -->
+          <path d="M40,70 C60,68 80,72 100,69 C120,67 140,71 160,68 C165,67 168,65 170,62 C172,59 174,55 178,40 C182,25 190,18 200,15 C205,13 210,14 215,22 C220,30 225,45 228,57 C232,68 240,70 260,69 C280,68 300,70 308,70"
+                fill="url(#anomalyGrad)" stroke="none"/>
+          <path d="M40,70 C60,68 80,72 100,69 C120,67 140,71 160,68 C165,67 168,65 170,62 C172,59 174,55 178,40 C182,25 190,18 200,15 C205,13 210,14 215,22 C220,30 225,45 228,57 C232,68 240,70 260,69 C280,68 300,70 308,70"
+                fill="none" stroke="#FF5A5A" stroke-width="1.5" stroke-dasharray="none"/>
+          <!-- stable part fill -->
+          <path d="M40,108 L40,70 C60,68 80,72 100,69 C120,67 140,71 160,68 L160,108 Z"
+                fill="url(#normalGrad)" stroke="none"/>
+          <path d="M40,70 C60,68 80,72 100,69 C120,67 140,71 160,68"
+                fill="none" stroke="#00D4A4" stroke-width="1.8"/>
+          <!-- anomaly spike annotation -->
+          <line x1="178" y1="40" x2="178" y2="108" stroke="rgba(255,90,90,0.25)" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="182" y="30" fill="var(--red)" font-size="7.5" font-family="JetBrains Mono">⚠ anomaly</text>
+          <!-- labels -->
+          <text x="80" y="88" fill="rgba(0,212,164,0.7)" font-size="7.5" font-family="JetBrains Mono">normal user</text>
+          <!-- legend -->
+          <rect x="220" y="14" width="8" height="2" fill="var(--teal)" rx="1"/>
+          <text x="232" y="17" fill="rgba(255,255,255,0.4)" font-size="7" font-family="JetBrains Mono">Stable behavior</text>
+          <rect x="220" y="22" width="8" height="2" fill="var(--red)" rx="1"/>
+          <text x="232" y="25" fill="rgba(255,255,255,0.4)" font-size="7" font-family="JetBrains Mono">Sudden spike</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Why critical -->
+    <div class="mid-panel why-panel">
+      <div class="pan-title">🎯 Why This Matters</div>
+      <div class="why-stat"><span class="ws-icon">📉</span><div class="ws-text"><strong>Fewer false alarms</strong> — accurate baseline means fewer wrong triggers</div></div>
+      <div class="why-stat"><span class="ws-icon">🔐</span><div class="ws-text"><strong>Stronger security</strong> — tight baseline catches real attacks faster</div></div>
+      <div class="why-stat"><span class="ws-icon">🤝</span><div class="ws-text"><strong>Better user experience</strong> — legit users are never interrupted</div></div>
+      <div class="why-note">"Accurate baseline = fewer false positives + stronger security"</div>
+    </div>
+
+  </div>
+
+  <!-- DATA FLOW STRIP -->
+  <div class="flow-strip">
+    <div class="flow-strip-title">⟶ Data Flow Pipeline — how raw events become an intelligent model</div>
+    <div class="flow-nodes">
+      <div class="flow-node">
+        <span class="fn-icon">📥</span>
+        <div class="fn-title">Raw Events</div>
+        <div class="fn-sub">clicks, keys, touch</div>
+      </div>
+      <div class="flow-arr"><div class="fa-line"></div><div class="fa-head"></div></div>
+      <div class="flow-node">
+        <span class="fn-icon">🔧</span>
+        <div class="fn-title">Feature Extraction</div>
+        <div class="fn-sub">latency, velocity, entropy</div>
+      </div>
+      <div class="flow-arr"><div class="fa-line"></div><div class="fa-head"></div></div>
+      <div class="flow-node">
+        <span class="fn-icon">⚖️</span>
+        <div class="fn-title">Normalization</div>
+        <div class="fn-sub">scale &amp; clean data</div>
+      </div>
+      <div class="flow-arr"><div class="fa-line"></div><div class="fa-head"></div></div>
+      <div class="flow-node">
+        <span class="fn-icon">🧠</span>
+        <div class="fn-title">Baseline Model</div>
+        <div class="fn-sub">LSTM + clustering trained</div>
+      </div>
+      <div class="flow-arr"><div class="fa-line"></div><div class="fa-head"></div></div>
+      <div class="flow-node">
+        <span class="fn-icon">🎯</span>
+        <div class="fn-title">Threshold Engine</div>
+        <div class="fn-sub">risk scores calibrated</div>
+      </div>
+      <div class="flow-arr"><div class="fa-line"></div><div class="fa-head"></div></div>
+      <div class="flow-node" style="border-color:rgba(0,212,164,0.3);background:rgba(0,212,164,0.06)">
+        <span class="fn-icon">🛡</span>
+        <div class="fn-title" style="color:var(--teal)">Live Guard</div>
+        <div class="fn-sub">active enforcement</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA COLLECTED -->
+  <div class="data-bottom">
+    <div class="db-title">📊 Data Collected During Initialization</div>
+    <div class="db-grid">
+      <div class="db-item"><span class="dot"></span>Keystroke timing intervals &amp; pressure levels</div>
+      <div class="db-item"><span class="dot"></span>Mouse velocity &amp; click patterns</div>
+      <div class="db-item"><span class="dot"></span>Scroll speed &amp; navigation rhythm</div>
+      <div class="db-item"><span class="dot"></span>Typical login hours &amp; locations</div>
+      <div class="db-item"><span class="dot"></span>Device fingerprint attributes</div>
+      <div class="db-item"><span class="dot"></span>Application usage sequences</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-tag">CONTINUOUS AUTHENTICATION SYSTEM · v2.0</div>
+    <div class="footer-note">⚠ No monitoring or security enforcement occurs during initialization — system only learns, never judges.</div>
+    <div class="footer-slide">02 / 06</div>
+  </div>
+
+</div>
+</body>
+</html>

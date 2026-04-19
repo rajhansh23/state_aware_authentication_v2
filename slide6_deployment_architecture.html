@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Slide 6 – Deployment Architecture: Where It Fits in a Real System</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:     #0D0F14;
+  --card:   #141720;
+  --border: rgba(255,255,255,0.08);
+  --text:   #F0EEE8;
+  --muted:  #8A8A9A;
+  --teal:   #00D4A4;
+  --purple: #9B6DFF;
+  --amber:  #FFB547;
+  --red:    #FF5A5A;
+  --green:  #3ECF8E;
+  --blue:   #4DA6FF;
+  --pink:   #FF6EB4;
+  --cyan:   #00E5FF;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
+.slide {
+  width: 1200px; margin: 0 auto; background: var(--bg);
+  position: relative; overflow: hidden; padding: 20px 38px 22px;
+}
+.slide::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 48px 48px; pointer-events: none; z-index: 0;
+}
+.blob { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.08; pointer-events: none; z-index: 0; }
+.blob-1 { width: 400px; height: 300px; background: var(--blue);   top: -70px; left: -90px; }
+.blob-2 { width: 340px; height: 280px; background: var(--teal);   bottom: -50px; right: -70px; }
+.blob-3 { width: 280px; height: 220px; background: var(--purple); top: 220px; left: 36%; }
+.blob-4 { width: 220px; height: 180px; background: var(--amber);  bottom: 80px; left: 14%; }
+
+/* ─── HEADER ─── */
+.header {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 12px; padding-bottom: 11px; border-bottom: 1px solid var(--border);
+}
+.slide-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--blue); background: rgba(77,166,255,0.1);
+  border: 1px solid rgba(77,166,255,0.25); border-radius: 20px; padding: 4px 12px; margin-bottom: 8px;
+}
+.slide-tag .dot { width: 6px; height: 6px; background: var(--blue); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+h1 span { color: var(--blue); }
+.subtitle { font-size: 10.5px; color: var(--muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.hdr-tags { display: flex; gap: 6px; align-items: flex-start; flex-wrap: wrap; justify-content: flex-end; max-width: 360px; }
+.hdr-tag {
+  font-size: 9px; font-weight: 600; padding: 3px 9px; border-radius: 10px; border: 1px solid;
+  font-family: 'JetBrains Mono', monospace;
+}
+.ht-blue   { color: var(--blue);   border-color: rgba(77,166,255,0.3);  background: rgba(77,166,255,0.07); }
+.ht-green  { color: var(--green);  border-color: rgba(62,207,142,0.3);  background: rgba(62,207,142,0.07); }
+.ht-amber  { color: var(--amber);  border-color: rgba(255,181,71,0.3);  background: rgba(255,181,71,0.07); }
+.ht-purple { color: var(--purple); border-color: rgba(155,109,255,0.3); background: rgba(155,109,255,0.07); }
+.ht-teal   { color: var(--teal);   border-color: rgba(0,212,164,0.3);   background: rgba(0,212,164,0.07); }
+.ht-red    { color: var(--red);    border-color: rgba(255,90,90,0.3);   background: rgba(255,90,90,0.07); }
+
+/* ─── CI/CD PIPELINE STRIP ─── */
+.cicd-strip {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(77,166,255,0.15);
+  border-radius: 10px; padding: 8px 14px; margin-bottom: 10px;
+}
+.cicd-strip::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--blue), var(--purple), var(--green), var(--teal));
+  border-radius: 10px 10px 0 0;
+}
+.cicd-title {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--blue); margin-bottom: 7px; font-family: 'JetBrains Mono', monospace;
+  display: flex; align-items: center; gap: 5px;
+}
+.cicd-nodes { display: flex; align-items: center; }
+.cicd-node {
+  flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 7px; padding: 6px 6px; text-align: center; position: relative;
+}
+.cn-icon { font-size: 13px; display: block; margin-bottom: 2px; }
+.cn-title { font-size: 9.5px; font-weight: 700; line-height: 1.2; }
+.cn-sub { font-size: 8px; color: var(--muted); margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+.cn-blue   .cn-title { color: var(--blue); }
+.cn-purple .cn-title { color: var(--purple); }
+.cn-amber  .cn-title { color: var(--amber); }
+.cn-green  .cn-title { color: var(--green); }
+.cn-teal   .cn-title { color: var(--teal); }
+.cn-blue   { border-color: rgba(77,166,255,0.2);  background: rgba(77,166,255,0.04); }
+.cn-purple { border-color: rgba(155,109,255,0.2); background: rgba(155,109,255,0.04); }
+.cn-amber  { border-color: rgba(255,181,71,0.2);  background: rgba(255,181,71,0.04); }
+.cn-green  { border-color: rgba(62,207,142,0.2);  background: rgba(62,207,142,0.04); }
+.cn-teal   { border-color: rgba(0,212,164,0.2);   background: rgba(0,212,164,0.04); }
+
+.cicd-arr {
+  flex: 0 0 20px; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 2px;
+}
+.ca-line { width: 12px; height: 1.5px; background: rgba(255,255,255,0.15); }
+.ca-head {
+  width: 0; height: 0;
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  border-left: 5px solid rgba(255,255,255,0.2);
+}
+.cicd-arr.animated .ca-head { animation: arrPulse 1.5s ease-in-out infinite; }
+@keyframes arrPulse { 0%,100%{opacity:0.3;transform:translateX(0)} 50%{opacity:1;transform:translateX(2px)} }
+
+/* ─── THREE-COLUMN ARCHITECTURE ─── */
+.arch-grid {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 9px;
+}
+
+/* column wrapper */
+.arch-col { display: flex; flex-direction: column; gap: 0; }
+.col-header {
+  border-radius: 8px 8px 0 0; padding: 7px 12px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  text-align: center;
+}
+.ch-red    { background: rgba(255,90,90,0.15);   color: var(--red);    border: 1px solid rgba(255,90,90,0.3);   border-bottom: none; }
+.ch-teal   { background: rgba(0,212,164,0.12);   color: var(--teal);   border: 1px solid rgba(0,212,164,0.3);   border-bottom: none; }
+.ch-purple { background: rgba(155,109,255,0.12); color: var(--purple); border: 1px solid rgba(155,109,255,0.3); border-bottom: none; }
+
+.col-body {
+  border: 1px solid; border-top: none; border-radius: 0 0 8px 8px;
+  padding: 10px 10px; display: flex; flex-direction: column; gap: 7px; flex: 1;
+}
+.cb-red    { border-color: rgba(255,90,90,0.2);   background: rgba(255,90,90,0.02); }
+.cb-teal   { border-color: rgba(0,212,164,0.2);   background: rgba(0,212,164,0.02); }
+.cb-purple { border-color: rgba(155,109,255,0.2); background: rgba(155,109,255,0.02); }
+
+/* service card inside column */
+.svc-card {
+  border-radius: 8px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03); padding: 8px 9px;
+  position: relative; overflow: hidden;
+}
+.svc-card::before {
+  content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+  border-radius: 8px 0 0 8px;
+}
+.sc-red::before    { background: var(--red); }
+.sc-teal::before   { background: var(--teal); }
+.sc-purple::before { background: var(--purple); }
+.sc-blue::before   { background: var(--blue); }
+.sc-amber::before  { background: var(--amber); }
+.sc-green::before  { background: var(--green); }
+.sc-pink::before   { background: var(--pink); }
+.sc-cyan::before   { background: var(--cyan); }
+
+.svc-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.svc-icon { font-size: 14px; }
+.svc-name { font-size: 10.5px; font-weight: 700; }
+.svc-name-red    { color: var(--red); }
+.svc-name-teal   { color: var(--teal); }
+.svc-name-purple { color: var(--purple); }
+.svc-name-blue   { color: var(--blue); }
+.svc-name-amber  { color: var(--amber); }
+.svc-name-green  { color: var(--green); }
+.svc-name-pink   { color: var(--pink); }
+.svc-name-cyan   { color: var(--cyan); }
+
+.svc-desc { font-size: 9px; color: var(--muted); line-height: 1.4; margin-bottom: 4px; }
+.svc-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+.s-tag {
+  font-size: 8.5px; font-family: 'JetBrains Mono', monospace; padding: 1px 5px; border-radius: 4px; border: 1px solid;
+}
+
+/* inter-column connector arrows */
+.arch-connectors {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; z-index: 2;
+}
+
+/* ─── BOTTOM THREE-PANEL ROW ─── */
+.bottom-row {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  margin-bottom: 9px;
+}
+.bot-panel {
+  border-radius: 10px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02); padding: 9px 11px; position: relative; overflow: hidden;
+}
+.bot-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 10px 10px 0 0;
+}
+.bp-green::before  { background: linear-gradient(90deg, var(--green),  transparent); }
+.bp-amber::before  { background: linear-gradient(90deg, var(--amber),  transparent); }
+.bp-cyan::before   { background: linear-gradient(90deg, var(--cyan),   transparent); }
+.bp-green  { border-color: rgba(62,207,142,0.2);  background: rgba(62,207,142,0.03); }
+.bp-amber  { border-color: rgba(255,181,71,0.2);  background: rgba(255,181,71,0.03); }
+.bp-cyan   { border-color: rgba(0,229,255,0.2);   background: rgba(0,229,255,0.03); }
+
+.bp-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em;
+  margin-bottom: 7px; display: flex; align-items: center; gap: 5px;
+}
+.bpt-green { color: var(--green); }
+.bpt-amber { color: var(--amber); }
+.bpt-cyan  { color: var(--cyan); }
+
+.bp-row { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 5px; }
+.bp-row:last-child { margin-bottom: 0; }
+.bp-ico { font-size: 11px; width: 15px; flex-shrink: 0; padding-top: 1px; }
+.bp-info { flex: 1; }
+.bp-name { font-size: 9.5px; font-weight: 600; color: var(--text); }
+.bp-desc { font-size: 8.5px; color: var(--muted); line-height: 1.3; margin-top: 1px; }
+
+/* ─── INTEGRATION FOOTER BANNER ─── */
+.int-banner {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 7px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 9px;
+}
+.int-text { font-size: 10px; color: var(--muted); font-style: italic; }
+.int-text strong { color: var(--text); }
+.int-badges { display: flex; gap: 5px; }
+.int-badge {
+  font-size: 8.5px; font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  padding: 3px 8px; border-radius: 6px; border: 1px solid;
+}
+
+/* ─── FOOTER ─── */
+.footer {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 9px; border-top: 1px solid var(--border);
+}
+.footer-tag  { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; }
+.footer-note { font-size: 9.5px; color: var(--muted); font-style: italic; }
+.footer-slide{ font-size: 11px; font-weight: 600; color: var(--blue); font-family: 'JetBrains Mono', monospace; }
+
+/* animated live dot */
+.live-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; animation: pulse 1.2s infinite; }
+.ld-teal { background: var(--teal); }
+.ld-red  { background: var(--red); }
+.ld-green{ background: var(--green); }
+
+/* sub-tag inside svc card */
+.svc-def {
+  font-size: 8px; color: var(--muted); font-style: italic; line-height: 1.3; margin-top: 3px;
+  border-left: 2px solid rgba(255,255,255,0.1); padding-left: 5px;
+}
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+
+  <!-- ─── HEADER ─── -->
+  <div class="header">
+    <div>
+      <div class="slide-tag"><span class="dot"></span> AI Security System · Slide 06</div>
+      <h1>Deployment Architecture: <span>Where It Fits</span> in a Real System</h1>
+      <div class="subtitle">// microservices · containers · zero trust · continuous delivery · real-time intelligence</div>
+    </div>
+    <div class="hdr-tags">
+      <span class="hdr-tag ht-blue">🐳 Dockerized</span>
+      <span class="hdr-tag ht-green">☸️ Kubernetes</span>
+      <span class="hdr-tag ht-amber">⚡ Kafka Streaming</span>
+      <span class="hdr-tag ht-purple">🧠 Feature Store</span>
+      <span class="hdr-tag ht-teal">🔁 CI/CD Pipeline</span>
+      <span class="hdr-tag ht-red">🔒 Zero Trust</span>
+    </div>
+  </div>
+
+  <!-- ─── CI/CD PIPELINE STRIP ─── -->
+  <div class="cicd-strip">
+    <div class="cicd-title">🔁 CI/CD DEPLOYMENT BACKBONE — Developer → Production</div>
+    <div class="cicd-nodes">
+      <div class="cicd-node cn-blue">
+        <span class="cn-icon">👨‍💻</span>
+        <div class="cn-title">Developer</div>
+        <div class="cn-sub">Code commit</div>
+      </div>
+      <div class="cicd-arr animated"><div class="ca-line"></div><div class="ca-head"></div></div>
+      <div class="cicd-node cn-purple">
+        <span class="cn-icon">🗂️</span>
+        <div class="cn-title">Code Repo</div>
+        <div class="cn-sub">GitHub / GitLab</div>
+      </div>
+      <div class="cicd-arr animated"><div class="ca-line"></div><div class="ca-head"></div></div>
+      <div class="cicd-node cn-amber">
+        <span class="cn-icon">⚙️</span>
+        <div class="cn-title">Build &amp; Test</div>
+        <div class="cn-sub">Jenkins / GitHub Actions</div>
+      </div>
+      <div class="cicd-arr animated"><div class="ca-line"></div><div class="ca-head"></div></div>
+      <div class="cicd-node cn-blue">
+        <span class="cn-icon">🧪</span>
+        <div class="cn-title">Test Suite</div>
+        <div class="cn-sub">Unit · Integration · Pen Test</div>
+      </div>
+      <div class="cicd-arr animated"><div class="ca-line"></div><div class="ca-head"></div></div>
+      <div class="cicd-node cn-green">
+        <span class="cn-icon">🐳</span>
+        <div class="cn-title">Docker Image</div>
+        <div class="cn-sub">Containerized service</div>
+      </div>
+      <div class="cicd-arr animated"><div class="ca-line"></div><div class="ca-head"></div></div>
+      <div class="cicd-node cn-teal">
+        <span class="cn-icon">☸️</span>
+        <div class="cn-title">Kubernetes</div>
+        <div class="cn-sub">Orchestrate &amp; scale</div>
+      </div>
+      <div class="cicd-arr animated"><div class="ca-line"></div><div class="ca-head"></div></div>
+      <div class="cicd-node cn-green" style="border-color:rgba(62,207,142,0.35); background:rgba(62,207,142,0.08);">
+        <span class="cn-icon">🚀</span>
+        <div class="cn-title">Production</div>
+        <div class="cn-sub"><span class="live-dot ld-green"></span> Live system</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── THREE-COLUMN ARCHITECTURE ─── -->
+  <div class="arch-grid">
+
+    <!-- ══ CLIENT SIDE ══ -->
+    <div class="arch-col">
+      <div class="col-header ch-red">📱 CLIENT SIDE</div>
+      <div class="col-body cb-red">
+
+        <div class="svc-card sc-red">
+          <div class="svc-top"><div class="svc-icon">🌐</div><div class="svc-name svc-name-red">Browser SDK</div></div>
+          <div class="svc-desc">JavaScript library embedded in the web app. Silently captures behavioral events (mouse, keyboard, touch) at 100ms intervals using Browser APIs.</div>
+          <div class="svc-def">💡 "SDK" = Software Development Kit — a pre-built library developers plug into their app</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">JavaScript</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">100ms polling</span>
+            <span class="s-tag" style="color:var(--red);border-color:rgba(255,90,90,0.2);background:rgba(255,90,90,0.06)">TLS encrypted</span>
+          </div>
+        </div>
+
+        <div class="svc-card sc-blue">
+          <div class="svc-top"><div class="svc-icon">📱</div><div class="svc-name svc-name-blue">Mobile Agent</div></div>
+          <div class="svc-desc">Native SDK for Android &amp; iOS. Captures touch gestures, gyroscope data, device accelerometer, and screen interaction patterns in real time.</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--blue);border-color:rgba(77,166,255,0.3);background:rgba(77,166,255,0.07)">Android SDK</span>
+            <span class="s-tag" style="color:var(--blue);border-color:rgba(77,166,255,0.3);background:rgba(77,166,255,0.07)">iOS SDK</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">Gyroscope</span>
+          </div>
+        </div>
+
+        <div class="svc-card sc-amber">
+          <div class="svc-top"><div class="svc-icon">📦</div><div class="svc-name svc-name-amber">Event Batcher</div></div>
+          <div class="svc-desc">Groups raw events into 100ms micro-batches before sending to the server. Reduces network overhead dramatically while preserving timing precision.</div>
+          <div class="svc-def">💡 Batching = grouping many small events into one package to save bandwidth</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">100ms batches</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">gzip compressed</span>
+          </div>
+        </div>
+
+        <!-- Kafka Streaming layer label -->
+        <div style="border-radius:8px;border:1px solid rgba(255,181,71,0.25);background:rgba(255,181,71,0.05);padding:7px 9px;margin-top:0">
+          <div style="font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:4px">⚡ Event Streaming Layer</div>
+          <div style="font-size:8.5px;color:var(--muted);line-height:1.4;">Batched events published to <strong style="color:var(--text)">Apache Kafka</strong> topic queue. Enables async, decoupled, high-throughput streaming between client and server — no data loss under load.</div>
+          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
+            <span class="s-tag" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">Apache Kafka</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">RabbitMQ alt.</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">Async processing</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ SERVER SIDE ══ -->
+    <div class="arch-col">
+      <div class="col-header ch-teal">🖥️ SERVER SIDE</div>
+      <div class="col-body cb-teal">
+
+        <!-- Load Balancer -->
+        <div class="svc-card sc-cyan">
+          <div class="svc-top"><div class="svc-icon">⚖️</div><div class="svc-name svc-name-cyan">Load Balancer</div></div>
+          <div class="svc-desc">Distributes incoming traffic across multiple API Gateway instances. Ensures no single server is overwhelmed. Enables horizontal scaling under high load.</div>
+          <div class="svc-def">💡 Load Balancer = traffic director — spreads requests evenly so servers don't crash</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--cyan);border-color:rgba(0,229,255,0.3);background:rgba(0,229,255,0.07)">NGINX</span>
+            <span class="s-tag" style="color:var(--cyan);border-color:rgba(0,229,255,0.3);background:rgba(0,229,255,0.07)">AWS ALB</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">Auto Scaling</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">Horizontal scale</span>
+          </div>
+        </div>
+
+        <div class="svc-card sc-teal">
+          <div class="svc-top"><div class="svc-icon">🔌</div><div class="svc-name svc-name-teal">API Gateway</div></div>
+          <div class="svc-desc">Receives encrypted behavioral streams from clients. Routes requests to appropriate microservices. Handles authentication, rate limiting, throttling, and API key management.</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--teal);border-color:rgba(0,212,164,0.3);background:rgba(0,212,164,0.07)">Node.js / Flask</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">Rate limiting</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">API keys</span>
+            <span class="s-tag" style="color:var(--red);border-color:rgba(255,90,90,0.2);background:rgba(255,90,90,0.06)">Throttling</span>
+          </div>
+        </div>
+
+        <!-- Feature Store -->
+        <div class="svc-card sc-purple">
+          <div class="svc-top"><div class="svc-icon">🗄️</div><div class="svc-name svc-name-purple">Feature Store</div></div>
+          <div class="svc-desc">Stores pre-computed behavioral features for each user — typing baseline, mouse velocity norms, device history. ML models read from here instead of recomputing each time.</div>
+          <div class="svc-def">💡 Feature Store = the ML system's "memory" of what normal looks like for each user</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--purple);border-color:rgba(155,109,255,0.3);background:rgba(155,109,255,0.07)">Feast</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">Redis cache</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">User baselines</span>
+          </div>
+        </div>
+
+        <div class="svc-card sc-blue">
+          <div class="svc-top"><div class="svc-icon">🧠</div><div class="svc-name svc-name-blue">ML Inference Service</div></div>
+          <div class="svc-desc">Runs LSTM + Random Forest ensemble against incoming feature vectors. Scores each batch against user baseline from Feature Store. Outputs anomaly score 0–1 + confidence.</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--blue);border-color:rgba(77,166,255,0.3);background:rgba(77,166,255,0.07)">TensorFlow Serving</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">ONNX Runtime</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">&lt;50ms inference</span>
+          </div>
+        </div>
+
+        <div class="svc-card sc-amber">
+          <div class="svc-top"><div class="svc-icon">⚙️</div><div class="svc-name svc-name-amber">Session Manager</div></div>
+          <div class="svc-desc">Maintains live session state per user. Updates risk score in real time. Triggers the correct response action (allow / OTP / block) based on Decision Engine output.</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">Redis sessions</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">WebSocket push</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ SECURITY LAYER ══ -->
+    <div class="arch-col">
+      <div class="col-header ch-purple">🔐 SECURITY LAYER</div>
+      <div class="col-body cb-purple">
+
+        <div class="svc-card sc-purple">
+          <div class="svc-top"><div class="svc-icon">👤</div><div class="svc-name svc-name-purple">Profile Store</div></div>
+          <div class="svc-desc">Stores AES-256 encrypted behavioral profiles per user. Contains typing baseline, device fingerprints, trusted IPs, and historical session summaries. GDPR anonymized.</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--purple);border-color:rgba(155,109,255,0.3);background:rgba(155,109,255,0.07)">AES-256</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">MongoDB</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">GDPR compliant</span>
+          </div>
+        </div>
+
+        <!-- Zero Trust box -->
+        <div style="border-radius:8px;border:1px solid rgba(255,90,90,0.3);background:rgba(255,90,90,0.05);padding:8px 9px;">
+          <div style="font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:5px;">🔒 Zero Trust Architecture</div>
+          <div style="font-size:8.5px;color:var(--muted);line-height:1.4;margin-bottom:4px;"><strong style="color:var(--text)">"Never trust, always verify"</strong> — every single request is re-authenticated, regardless of source or previous session approval. No implicit trust granted to anyone.</div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="font-size:8.5px;color:var(--muted);display:flex;gap:4px;align-items:flex-start"><span style="color:var(--red)">›</span> Every request verified with identity check</div>
+            <div style="font-size:8.5px;color:var(--muted);display:flex;gap:4px;align-items:flex-start"><span style="color:var(--red)">›</span> Identity-based access control (RBAC)</div>
+            <div style="font-size:8.5px;color:var(--muted);display:flex;gap:4px;align-items:flex-start"><span style="color:var(--red)">›</span> Behavioral score gates every action</div>
+          </div>
+        </div>
+
+        <div class="svc-card sc-green">
+          <div class="svc-top"><div class="svc-icon">📋</div><div class="svc-name svc-name-green">Audit Logger</div></div>
+          <div class="svc-desc">Immutable, append-only log of all security events — every risk score, every session block, every OTP trigger. Used for forensic analysis and regulatory compliance.</div>
+          <div class="svc-def">💡 Immutable log = entries can never be deleted or altered — critical for audits</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--green);border-color:rgba(62,207,142,0.3);background:rgba(62,207,142,0.07)">PostgreSQL</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">Append-only</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">WORM storage</span>
+          </div>
+        </div>
+
+        <div class="svc-card sc-pink">
+          <div class="svc-top"><div class="svc-icon">🚨</div><div class="svc-name svc-name-pink">Alert Engine</div></div>
+          <div class="svc-desc">Fires alerts to admin when high-risk events occur. Sends push notifications, emails, and Slack alerts. Feeds anomaly data back into the retraining pipeline automatically.</div>
+          <div class="svc-tags" style="margin-top:4px">
+            <span class="s-tag" style="color:var(--pink);border-color:rgba(255,110,180,0.3);background:rgba(255,110,180,0.07)">PagerDuty</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">Slack webhooks</span>
+            <span class="s-tag" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)">Email alerts</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end arch-grid -->
+
+  <!-- ─── BOTTOM ROW: 3 advanced panels ─── -->
+  <div class="bottom-row">
+
+    <!-- Model Lifecycle -->
+    <div class="bot-panel bp-green">
+      <div class="bp-title bpt-green">🔁 Model Lifecycle Management</div>
+      <div class="bp-row">
+        <div class="bp-ico">🏋️</div>
+        <div class="bp-info">
+          <div class="bp-name">Training Pipeline</div>
+          <div class="bp-desc">New labeled anomaly data → retrain LSTM + RF → generate updated model weights. Scheduled or triggered by alert volume spikes.</div>
+        </div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-ico">📌</div>
+        <div class="bp-info">
+          <div class="bp-name">Model Versioning</div>
+          <div class="bp-desc">Each trained model tagged with version (e.g. v2.3.1). Old versions kept for rollback. MLflow / DVC tracks experiments.</div>
+        </div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-ico">⚗️</div>
+        <div class="bp-info">
+          <div class="bp-name">A/B Testing</div>
+          <div class="bp-desc">New model served to 10% of traffic first. Metrics compared to current model. If better → full rollout. Eliminates risky big-bang deployments.</div>
+        </div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-ico">🔄</div>
+        <div class="bp-info">
+          <div class="bp-name">Retraining Loop</div>
+          <div class="bp-desc">High-risk confirmed events automatically added to training dataset. Continuous learning ensures model adapts to new attack patterns.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disaster Recovery + Admin Dashboard -->
+    <div class="bot-panel bp-amber">
+      <div class="bp-title bpt-amber">☁️ Disaster Recovery &amp; Infrastructure</div>
+      <div class="bp-row">
+        <div class="bp-ico">💾</div>
+        <div class="bp-info">
+          <div class="bp-name">Backup Storage</div>
+          <div class="bp-desc">All logs and user profiles backed up to AWS S3 / Azure Blob every 6 hours. Encrypted at rest with AES-256. Retention: 90 days.</div>
+        </div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-ico">🌍</div>
+        <div class="bp-info">
+          <div class="bp-name">Failover Region</div>
+          <div class="bp-desc">Secondary deployment region (e.g. US-East → EU-West). If primary goes down, DNS auto-routes traffic to standby within 30 seconds. RTO &lt; 1 min.</div>
+        </div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-ico">🔁</div>
+        <div class="bp-info">
+          <div class="bp-name">Data Replication</div>
+          <div class="bp-desc">MongoDB replica sets + PostgreSQL streaming replication across 3 nodes. No single point of failure. Automatic leader election on node failure.</div>
+        </div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-ico">📊</div>
+        <div class="bp-info">
+          <div class="bp-name">Admin Dashboard</div>
+          <div class="bp-desc">Real-time risk score visualization, live session map, anomaly heatmap, alert feed. Built on Grafana + Prometheus metrics pipeline.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Testing Layer + Docker/K8s -->
+    <div class="bot-panel bp-cyan">
+      <div class="bp-title bpt-cyan">🐳 Containerization &amp; Testing</div>
+      <div class="bp-row">
+        <div class="bp-ico">🐳</div>
+        <div class="bp-info">
+          <div class="bp-name">Docker — Service Containers</div>
+          <div class="bp-desc">Each microservice (API Gateway, ML Inference, Session Manager, Alert Engine) runs in its own isolated Docker container. <em>"Microservices deployed via containers."</em></div>
+        </div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-ico">☸️</div>
+        <div class="bp-info">
+          <div class="bp-name">Kubernetes — Orchestration</div>
+          <div class="bp-desc">Manages container scaling, self-healing, rolling updates, and load distribution. Auto-scales ML pods under traffic spikes. HPA (Horizontal Pod Autoscaler) watches CPU/mem.</div>
+        </div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-ico">🧪</div>
+        <div class="bp-info">
+          <div class="bp-name">Unit &amp; Integration Testing</div>
+          <div class="bp-desc">Every service has unit tests (pytest / Jest). Integration tests verify cross-service data flow (e.g. Event Batcher → Kafka → ML Inference end-to-end).</div>
+        </div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-ico">🛡️</div>
+        <div class="bp-info">
+          <div class="bp-name">Load &amp; Pen Testing</div>
+          <div class="bp-desc">Load testing with k6 / Locust simulates 10k concurrent sessions. Penetration testing (OWASP) performed before every major release. SLA: 99.9% uptime.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end bottom-row -->
+
+  <!-- ─── INTEGRATION BANNER ─── -->
+  <div class="int-banner">
+    <div class="int-text">
+      <strong>Integration:</strong> State-Aware Auth layers on top of existing systems via SDK/API — <em>no rip-and-replace of current infrastructure required.</em>
+      All components are independently deployable, horizontally scalable, and observable via Prometheus + Grafana.
+    </div>
+    <div class="int-badges">
+      <span class="int-badge" style="color:var(--green);border-color:rgba(62,207,142,0.3);background:rgba(62,207,142,0.07)">99.9% SLA</span>
+      <span class="int-badge" style="color:var(--blue);border-color:rgba(77,166,255,0.3);background:rgba(77,166,255,0.07)">Cloud-Native</span>
+      <span class="int-badge" style="color:var(--teal);border-color:rgba(0,212,164,0.3);background:rgba(0,212,164,0.07)">SDK Drop-in</span>
+      <span class="int-badge" style="color:var(--amber);border-color:rgba(255,181,71,0.3);background:rgba(255,181,71,0.07)">GDPR Ready</span>
+    </div>
+  </div>
+
+  <!-- ─── FOOTER ─── -->
+  <div class="footer">
+    <div class="footer-tag">CONTINUOUS AUTHENTICATION SYSTEM · v2.0</div>
+    <div class="footer-note"><em>"Every component containerized, orchestrated, monitored, and secured — production-grade from day one."</em></div>
+    <div class="footer-slide">06 / 06</div>
+  </div>
+
+</div>
+</body>
+</html>

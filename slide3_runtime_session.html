@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Slide 3 – Runtime Session Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #0D0F14;
+  --card:   #141720;
+  --border: rgba(255,255,255,0.08);
+  --text:   #F0EEE8;
+  --muted:  #8A8A9A;
+  --teal:   #00D4A4;
+  --purple: #9B6DFF;
+  --amber:  #FFB547;
+  --red:    #FF5A5A;
+  --green:  #3ECF8E;
+  --blue:   #4DA6FF;
+  --pink:   #FF6EB4;
+  --cyan:   #00E5FF;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+}
+
+.slide {
+  width: 1200px;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  padding: 24px 44px 28px;
+}
+
+.slide::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+.blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.1; pointer-events: none; z-index: 0; }
+.blob-1 { width: 350px; height: 280px; background: var(--blue);   top: -40px; left: -60px; }
+.blob-2 { width: 300px; height: 260px; background: var(--purple); bottom: 80px; right: -50px; }
+.blob-3 { width: 240px; height: 200px; background: var(--cyan);   top: 180px; left: 35%; }
+
+/* ── HEADER ── */
+.header {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 16px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.slide-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--blue); background: rgba(77,166,255,0.1);
+  border: 1px solid rgba(77,166,255,0.25); border-radius: 20px; padding: 4px 12px; margin-bottom: 8px;
+}
+.slide-tag .dot { width: 6px; height: 6px; background: var(--blue); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+h1 span { color: var(--blue); }
+.subtitle { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.hdr-right { display: flex; gap: 8px; align-items: flex-start; padding-top: 2px; }
+
+/* metric pill */
+.metric-pill {
+  display: flex; flex-direction: column; align-items: center;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 7px 12px; min-width: 80px;
+}
+.mp-val { font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.mp-lbl { font-size: 8.5px; color: var(--muted); margin-top: 2px; text-align: center; line-height: 1.3; }
+.mp-green { color: var(--green); border-color: rgba(62,207,142,0.2); background: rgba(62,207,142,0.05); }
+.mp-blue  { color: var(--blue);  border-color: rgba(77,166,255,0.2); background: rgba(77,166,255,0.05); }
+.mp-amber { color: var(--amber); border-color: rgba(255,181,71,0.2); background: rgba(255,181,71,0.05); }
+
+/* ── MAIN GRID ── */
+.main-grid {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* flow steps row */
+.steps-row {
+  position: relative; z-index: 1;
+  display: flex; align-items: stretch; gap: 0;
+  margin-bottom: 8px;
+}
+
+.step-card {
+  flex: 1;
+  border-radius: 10px; padding: 11px 10px;
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.03);
+  display: flex; flex-direction: column;
+}
+.step-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 10px 10px 0 0;
+}
+.s1::before { background: linear-gradient(90deg, var(--red), transparent); }
+.s2::before { background: linear-gradient(90deg, var(--teal), transparent); }
+.s3::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+.s4::before { background: linear-gradient(90deg, var(--purple), transparent); }
+.s5::before { background: linear-gradient(90deg, var(--amber), transparent); }
+.s6::before { background: linear-gradient(90deg, var(--green), transparent); }
+.s7::before { background: linear-gradient(90deg, var(--blue), transparent); }
+
+.s1 { border-color: rgba(255,90,90,0.2);   background: rgba(255,90,90,0.04); }
+.s2 { border-color: rgba(0,212,164,0.2);   background: rgba(0,212,164,0.04); }
+.s3 { border-color: rgba(0,229,255,0.2);   background: rgba(0,229,255,0.04); }
+.s4 { border-color: rgba(155,109,255,0.2); background: rgba(155,109,255,0.04); }
+.s5 { border-color: rgba(255,181,71,0.2);  background: rgba(255,181,71,0.04); }
+.s6 { border-color: rgba(62,207,142,0.2);  background: rgba(62,207,142,0.04); }
+.s7 { border-color: rgba(77,166,255,0.2);  background: rgba(77,166,255,0.04); }
+
+.step-num {
+  width: 22px; height: 22px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; margin-bottom: 6px; flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.s1 .step-num { background: rgba(255,90,90,0.2);   color: var(--red);    border: 1px solid rgba(255,90,90,0.35); }
+.s2 .step-num { background: rgba(0,212,164,0.2);   color: var(--teal);   border: 1px solid rgba(0,212,164,0.35); }
+.s3 .step-num { background: rgba(0,229,255,0.2);   color: var(--cyan);   border: 1px solid rgba(0,229,255,0.35); }
+.s4 .step-num { background: rgba(155,109,255,0.2); color: var(--purple); border: 1px solid rgba(155,109,255,0.35); }
+.s5 .step-num { background: rgba(255,181,71,0.2);  color: var(--amber);  border: 1px solid rgba(255,181,71,0.35); }
+.s6 .step-num { background: rgba(62,207,142,0.2);  color: var(--green);  border: 1px solid rgba(62,207,142,0.35); }
+.s7 .step-num { background: rgba(77,166,255,0.2);  color: var(--blue);   border: 1px solid rgba(77,166,255,0.35); }
+
+.step-icon { font-size: 16px; margin-bottom: 4px; display: block; }
+.step-title { font-size: 10.5px; font-weight: 700; line-height: 1.3; margin-bottom: 5px; }
+.s1 .step-title { color: var(--red); }
+.s2 .step-title { color: var(--teal); }
+.s3 .step-title { color: var(--cyan); }
+.s4 .step-title { color: var(--purple); }
+.s5 .step-title { color: var(--amber); }
+.s6 .step-title { color: var(--green); }
+.s7 .step-title { color: var(--blue); }
+
+.step-body { font-size: 9px; color: var(--muted); line-height: 1.5; flex: 1; }
+.step-body li { list-style: none; padding-left: 10px; position: relative; margin-bottom: 2px; }
+.step-body li::before { content: '›'; position: absolute; left: 0; }
+.step-tag {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 8px; font-weight: 600; border-radius: 10px; padding: 2px 6px; margin-top: 6px;
+}
+.s1 .step-tag { background: rgba(255,90,90,0.12); color: var(--red); }
+.s2 .step-tag { background: rgba(0,212,164,0.1);  color: var(--teal); }
+.s3 .step-tag { background: rgba(0,229,255,0.1);  color: var(--cyan); }
+.s4 .step-tag { background: rgba(155,109,255,0.12);color: var(--purple); }
+.s5 .step-tag { background: rgba(255,181,71,0.12); color: var(--amber); }
+.s6 .step-tag { background: rgba(62,207,142,0.1);  color: var(--green); }
+.s7 .step-tag { background: rgba(77,166,255,0.1);  color: var(--blue); }
+
+/* between-card arrow connector */
+.step-arr {
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto; width: 14px; padding-top: 30px;
+}
+.sa-inner { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sa-dot  { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+.sa-tip  { width:0; height:0; border-top:3px solid transparent; border-bottom:3px solid transparent; border-left:5px solid rgba(255,255,255,0.18); }
+
+/* ── RISK METER + OUTCOMES ── */
+.outcomes-row {
+  position: relative; z-index: 1;
+  display: flex; gap: 8px; margin-bottom: 8px; align-items: stretch;
+}
+
+.risk-meter-wrap {
+  flex: 0 0 auto; width: 220px;
+  background: rgba(255,255,255,0.025); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px;
+}
+.rm-title { font-size: 10px; font-weight: 700; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.risk-bar { height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 5px;
+  background: linear-gradient(90deg, var(--green) 0%, #7BCC40 25%, var(--amber) 50%, #FF8C00 75%, var(--red) 100%);
+  position: relative;
+}
+.risk-bar-labels { display: flex; justify-content: space-between; font-size: 8px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; }
+.risk-zones { display: flex; flex-direction: column; gap: 4px; }
+.rz-item { display: flex; align-items: center; gap: 7px; }
+.rz-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.rz-text { font-size: 9px; color: var(--muted); }
+.rz-text strong { color: var(--text); }
+
+.outcome-cards { flex: 1; display: flex; gap: 8px; }
+.oc-card {
+  flex: 1; border-radius: 10px; padding: 10px 12px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.oc-low    { background: rgba(62,207,142,0.07);  border: 1px solid rgba(62,207,142,0.25); }
+.oc-medium { background: rgba(255,181,71,0.07);  border: 1px solid rgba(255,181,71,0.25); }
+.oc-high   { background: rgba(255,90,90,0.07);   border: 1px solid rgba(255,90,90,0.25); }
+
+.oc-icon  { font-size: 22px; }
+.oc-label { font-size: 11px; font-weight: 700; }
+.low-l    { color: var(--green); }
+.mid-l    { color: var(--amber); }
+.high-l   { color: var(--red); }
+.oc-range { font-size: 8.5px; font-family: 'JetBrains Mono', monospace; color: var(--muted); }
+.oc-action { font-size: 9.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.act-l { background: rgba(62,207,142,0.15); color: var(--green); }
+.act-m { background: rgba(255,181,71,0.15); color: var(--amber); }
+.act-h { background: rgba(255,90,90,0.15);  color: var(--red); }
+.oc-sub { font-size: 8.5px; color: var(--muted); line-height: 1.4; }
+
+/* ── BOTTOM EXTRA PANELS ── */
+.bottom-row {
+  position: relative; z-index: 1;
+  display: flex; gap: 8px; margin-bottom: 8px;
+}
+.bp {
+  flex: 1; border-radius: 10px; padding: 10px 12px;
+  border: 1px solid var(--border); background: rgba(255,255,255,0.025);
+}
+.bp-title { font-size: 10px; font-weight: 700; margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+.bp-item { display: flex; align-items: flex-start; gap: 5px; font-size: 9px; color: var(--muted); margin-bottom: 4px; line-height: 1.4; }
+.bp-item .bpi-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; opacity: 0.8; }
+.bp-item strong { color: var(--text); }
+
+.bp-tech   { border-color: rgba(0,229,255,0.18); background: rgba(0,229,255,0.03); }
+.bp-tech   .bp-title { color: var(--cyan); }
+.bp-sec    { border-color: rgba(77,166,255,0.18); background: rgba(77,166,255,0.03); }
+.bp-sec    .bp-title { color: var(--blue); }
+.bp-innov  { border-color: rgba(155,109,255,0.18); background: rgba(155,109,255,0.03); }
+.bp-innov  .bp-title { color: var(--purple); }
+.bp-future { border-color: rgba(255,110,180,0.18); background: rgba(255,110,180,0.03); }
+.bp-future .bp-title { color: var(--pink); }
+
+/* ── FOOTER ── */
+.footer {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+.footer-tag  { font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--muted); letter-spacing: 0.06em; }
+.footer-note { font-size: 9.5px; font-style: italic; color: var(--cyan); }
+.footer-slide{ font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="slide-tag"><span class="dot"></span>SLIDE 03 · RUNTIME MECHANISM</div>
+      <h1>AI-Driven Runtime Session Intelligence<br><span>&amp; Adaptive Security Lifecycle</span></h1>
+      <div class="subtitle">// 7-layer live pipeline · real-time ML scoring · &lt;200ms response · passive &amp; invisible</div>
+    </div>
+    <div class="hdr-right">
+      <div class="metric-pill mp-green"><span class="mp-val">95%+</span><span class="mp-lbl">Detection<br>Accuracy</span></div>
+      <div class="metric-pill mp-blue"> <span class="mp-val">&lt;200ms</span><span class="mp-lbl">Response<br>Time</span></div>
+      <div class="metric-pill mp-amber"><span class="mp-val">&lt;3%</span><span class="mp-lbl">False Positive<br>Rate</span></div>
+    </div>
+  </div>
+
+  <!-- 7 STEP CARDS -->
+  <div class="steps-row">
+
+    <!-- Step 1 -->
+    <div class="step-card s1">
+      <div class="step-num">1</div>
+      <span class="step-icon">🔑</span>
+      <div class="step-title">Identity Authentication Layer</div>
+      <ul class="step-body">
+        <li>Password / OTP / Biometrics</li>
+        <li>JWT token generated on login</li>
+        <li>Secure session cookie created</li>
+        <li>Device fingerprint captured at entry</li>
+      </ul>
+      <span class="step-tag">MFA Gate</span>
+    </div>
+    <div class="step-arr"><div class="sa-inner"><div class="sa-dot"></div><div class="sa-dot"></div><div class="sa-tip"></div></div></div>
+
+    <!-- Step 2 -->
+    <div class="step-card s2">
+      <div class="step-num">2</div>
+      <span class="step-icon">🚀</span>
+      <div class="step-title">Session Initialization Layer</div>
+      <ul class="step-body">
+        <li>Unique Session ID assigned</li>
+        <li>Behavioral hooks activated silently</li>
+        <li>Context locked in:</li>
+        <li style="padding-left:18px">IP · Location · Device · Time</li>
+      </ul>
+      <span class="step-tag">Context Capture</span>
+    </div>
+    <div class="step-arr"><div class="sa-inner"><div class="sa-dot"></div><div class="sa-dot"></div><div class="sa-tip"></div></div></div>
+
+    <!-- Step 3 -->
+    <div class="step-card s3">
+      <div class="step-num">3</div>
+      <span class="step-icon">📡</span>
+      <div class="step-title">Real-Time Behavioral Capture Engine</div>
+      <ul class="step-body">
+        <li>Sampled every 50–100ms</li>
+        <li>Mouse movement patterns</li>
+        <li>Typing rhythm &amp; keystroke timing</li>
+        <li>Scroll velocity &amp; touch gestures</li>
+        <li>Streamed live to AI engine</li>
+      </ul>
+      <span class="step-tag">Low Latency</span>
+    </div>
+    <div class="step-arr"><div class="sa-inner"><div class="sa-dot"></div><div class="sa-dot"></div><div class="sa-tip"></div></div></div>
+
+    <!-- Step 4 -->
+    <div class="step-card s4">
+      <div class="step-num">4</div>
+      <span class="step-icon">🧠</span>
+      <div class="step-title">AI/ML Behavioral Analysis Layer</div>
+      <ul class="step-body">
+        <li>LSTM → time pattern learning</li>
+        <li>Random Forest → anomaly classification</li>
+        <li>Compared to user baseline profile</li>
+        <li>Outputs: Risk Score (0–100)</li>
+        <li>Confidence Level (%)</li>
+      </ul>
+      <span class="step-tag">Dual-Model AI</span>
+    </div>
+    <div class="step-arr"><div class="sa-inner"><div class="sa-dot"></div><div class="sa-dot"></div><div class="sa-tip"></div></div></div>
+
+    <!-- Step 5 -->
+    <div class="step-card s5">
+      <div class="step-num">5</div>
+      <span class="step-icon">⚙️</span>
+      <div class="step-title">Decision Intelligence Engine</div>
+      <ul class="step-body">
+        <li>Rule + ML hybrid system</li>
+        <li>Dynamic threshold comparison</li>
+        <li>Context-aware decisions:</li>
+        <li style="padding-left:18px">Time · Location · Device mismatch</li>
+      </ul>
+      <span class="step-tag">Hybrid Rules</span>
+    </div>
+    <div class="step-arr"><div class="sa-inner"><div class="sa-dot"></div><div class="sa-dot"></div><div class="sa-tip"></div></div></div>
+
+    <!-- Step 6 -->
+    <div class="step-card s6">
+      <div class="step-num">6</div>
+      <span class="step-icon">🛡</span>
+      <div class="step-title">Adaptive Response System</div>
+      <ul class="step-body">
+        <li>Low → session continues normally</li>
+        <li>Medium → OTP / Security Q challenge</li>
+        <li>High → terminate + alert sent</li>
+        <li>Response logged in all cases</li>
+      </ul>
+      <span class="step-tag">3-Tier Action</span>
+    </div>
+    <div class="step-arr"><div class="sa-inner"><div class="sa-dot"></div><div class="sa-dot"></div><div class="sa-tip"></div></div></div>
+
+    <!-- Step 7 -->
+    <div class="step-card s7">
+      <div class="step-num">7</div>
+      <span class="step-icon">📊</span>
+      <div class="step-title">Logging &amp; Continuous Learning</div>
+      <ul class="step-body">
+        <li>All events stored securely</li>
+        <li>Feedback loop improves accuracy</li>
+        <li>Reduces false positives over time</li>
+        <li>Periodic + real-time retraining</li>
+      </ul>
+      <span class="step-tag">Self-Improving</span>
+    </div>
+
+  </div>
+
+  <!-- RISK METER + OUTCOMES -->
+  <div class="outcomes-row">
+
+    <div class="risk-meter-wrap">
+      <div class="rm-title">🎯 Risk Score Meter</div>
+      <div class="risk-bar"></div>
+      <div class="risk-bar-labels"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+      <div class="risk-zones">
+        <div class="rz-item"><div class="rz-dot" style="background:var(--green)"></div><div class="rz-text"><strong>Low (0–33)</strong> — behavior matches baseline well</div></div>
+        <div class="rz-item"><div class="rz-dot" style="background:var(--amber)"></div><div class="rz-text"><strong>Medium (34–66)</strong> — some deviation detected</div></div>
+        <div class="rz-item"><div class="rz-dot" style="background:var(--red)"></div><div class="rz-text"><strong>High (67–100)</strong> — strong anomaly, possible threat</div></div>
+      </div>
+    </div>
+
+    <div class="outcome-cards">
+      <div class="oc-card oc-low">
+        <div class="oc-icon">✅</div>
+        <div class="oc-label low-l">Low Risk</div>
+        <div class="oc-range">Score: 0 – 33</div>
+        <div class="oc-action act-l">Session Continues</div>
+        <div class="oc-sub">No disruption to the user. Everything flows normally in the background.</div>
+      </div>
+      <div class="oc-card oc-medium">
+        <div class="oc-icon">🔐</div>
+        <div class="oc-label mid-l">Medium Risk</div>
+        <div class="oc-range">Score: 34 – 66</div>
+        <div class="oc-action act-m">Step-Up Auth</div>
+        <div class="oc-sub">OTP sent or security question asked. User must re-verify identity.</div>
+      </div>
+      <div class="oc-card oc-high">
+        <div class="oc-icon">🚫</div>
+        <div class="oc-label high-l">High Risk</div>
+        <div class="oc-range">Score: 67 – 100</div>
+        <div class="oc-action act-h">Terminate + Alert</div>
+        <div class="oc-sub">Session killed instantly. Security alert triggered. Event logged for review.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM PANELS -->
+  <div class="bottom-row">
+
+    <div class="bp bp-tech">
+      <div class="bp-title">⚡ Tech Stack Used</div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--cyan)"></div><span><strong>Python</strong> · TensorFlow · Scikit-learn (ML models)</span></div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--cyan)"></div><span><strong>Node.js / Flask</strong> — API layer handling requests</span></div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--cyan)"></div><span><strong>MongoDB / PostgreSQL</strong> — behavioral data storage</span></div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--cyan)"></div><span><strong>Apache Kafka</strong> — real-time event streaming pipeline</span></div>
+    </div>
+
+    <div class="bp bp-sec">
+      <div class="bp-title">🔒 Security Enhancements</div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--blue)"></div><span><strong>End-to-end TLS encryption</strong> — all data in transit is fully protected</span></div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--blue)"></div><span><strong>Zero Trust Architecture</strong> — no user is trusted by default, ever</span></div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--blue)"></div><span><strong>Continuous authentication</strong> — not just one login check, but every second</span></div>
+    </div>
+
+    <div class="bp bp-innov">
+      <div class="bp-title">💡 Key Innovation</div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--purple)"></div><span><strong>Passive authentication</strong> — user doesn't know it's happening</span></div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--purple)"></div><span><strong>Real-time AI decisions</strong> — scored and acted on in under 200ms</span></div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--purple)"></div><span><strong>Behavior ≠ password</strong> — behavior cannot be stolen or copied</span></div>
+    </div>
+
+    <div class="bp bp-future">
+      <div class="bp-title">🔮 Future Scope</div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--pink)"></div><span><strong>Zero Trust integration</strong> — verify identity at every system layer</span></div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--pink)"></div><span><strong>AutoML self-learning</strong> — model improves itself automatically</span></div>
+      <div class="bp-item"><div class="bpi-dot" style="background:var(--pink)"></div><span><strong>Cross-platform sync</strong> — one behavioral profile across all devices</span></div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-tag">CONTINUOUS AUTHENTICATION SYSTEM · v2.0</div>
+    <div class="footer-note">✦ Passive authentication — the user never feels it, but the system never stops watching.</div>
+    <div class="footer-slide">03 / 06</div>
+  </div>
+
+</div>
+</body>
+</html>
